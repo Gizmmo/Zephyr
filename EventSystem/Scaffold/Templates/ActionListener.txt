@@ -1,0 +1,20 @@
+using UnityEngine;
+using System.Collections;
+using Zephyr.EventSystem.Core.Playmaker.Actions;
+using HutongGames.PlayMaker;
+
+[ActionCategory("%CATEGORY%")]
+public class %NAME%Listener : AddListenerAction
+{
+
+    protected override void Init()
+    {
+        SetEventType<%NAME%Event>();
+    }
+
+    protected override void Exit()
+    {
+      base.Exit();
+      RemoveEvent<%NAME%Event>();
+    }
+}

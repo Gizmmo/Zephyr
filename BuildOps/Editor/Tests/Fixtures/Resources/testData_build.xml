@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<PlatformContainer xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Platform="mobile">
+  <Scenes>
+    <SceneContainer>
+      <NestedScenes>
+        <NestedScene Path="Assets/Zephyr/BuildOps/Editor/Tests/Scenes/Base.unity" Name="Base" />
+      </NestedScenes>
+    </SceneContainer>
+    <SceneContainer>
+      <NestedScenes>
+        <NestedScene Path="Assets/Zephyr/BuildOps/Editor/Tests/Scenes/SceneWithCube.unity" Name="SceneWithCube" />
+      </NestedScenes>
+    </SceneContainer>
+    <SceneContainer>
+      <NestedScenes>
+        <NestedScene Path="Assets/Zephyr/BuildOps/Editor/Tests/Scenes/SceneWithSphere.unity" Name="SceneWithSphere" />
+      </NestedScenes>
+    </SceneContainer>
+  </Scenes>
+</PlatformContainer>

@@ -1,0 +1,8 @@
+using UnityEngine;
+using System.Collections;
+using Zephyr.EventSystem.Core;
+
+public class %NAME%Event : GameEvent 
+{
+
+}

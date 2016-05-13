@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<SceneContainer xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <NestedScenes>
+    <NestedScene Path="Assets/Zephyr/BuildOps/Editor/Tests/Scenes/SceneWithSphere.unity" Name="SceneWithSphere" />
+    <NestedScene Path="Assets/Zephyr/BuildOps/Editor/Tests/Scenes/SceneWithCube.unity" Name="SceneWithCube" />
+  </NestedScenes>
+</SceneContainer>

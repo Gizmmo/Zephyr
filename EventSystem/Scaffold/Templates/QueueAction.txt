@@ -1,0 +1,15 @@
+using UnityEngine;
+using System.Collections;
+using Zephyr.EventSystem.Core.Playmaker.Actions;
+using Zephyr.EventSystem.Core;
+using HutongGames.PlayMaker;
+
+[ActionCategory("%CATEGORY%")]
+public class Queue%NAME% : QueueEventAction
+{
+
+    protected override GameEvent GetEventToQueue()
+    {
+        return new %NAME%Event();
+    }
+}
