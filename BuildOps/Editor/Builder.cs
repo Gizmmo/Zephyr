@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEditor;
 using BuildOps.BuildActions;
 using System.Runtime.InteropServices;
+using AppBuilder;
+using UnityEngine;
+using AncientLightStudios.uTomate;
+using AncientLightStudios.uTomate.API;
 
 namespace Zephyr.BuildOps
 {
@@ -22,22 +26,70 @@ namespace Zephyr.BuildOps
                 (BuildOptions)Enum.Parse(typeof(BuildOptions), GetArg("-buildOptions") ?? "None"));
         }
 
+        public static void IncreaseBuildVersion(bool major = false)
+        {
+            var version = PlayerSettings.bundleVersion;
+            var data = version.Split('.');
+            if(major)
+            {
+                var num = int.Parse(data[1]) + 1;
+                data[1] = num + "";
+            }
+            else
+            {
+                var num = int.Parse(data[2]) + 1;
+                data[2] = num + "";
+            }
+            version = data[0] + "." + data[1] + "." + data[2];
+            PlayerSettings.bundleVersion = version;  
+
+        }
+
         public static void PerformIOSBuild(string path = _targetDir)
         {
-            string target_dir = _appName;
-            GenericBuild(SCENES, path + "/" + target_dir, BuildTarget.iOS, BuildOptions.None);
+            var tempDirectory = _targetDir + "/tempDir";
+            if (System.IO.Directory.Exists(tempDirectory))
+            {
+                FileUtil.DeleteFileOrDirectory(tempDirectory); 
+            }
+            
+            GenericBuild(SCENES, tempDirectory, BuildTarget.iOS, BuildOptions.None);
         }
 
         public static void PerformAndroidBuild(string path = _targetDir)
         {
-            string target_dir = _appName + ".apk";
-            GenericBuild(SCENES, path + "/" + target_dir, BuildTarget.Android, BuildOptions.None);
+            string target_dir = CreateDirectories("android", path) + ".apk";
+            GenericBuild(SCENES, target_dir, BuildTarget.Android, BuildOptions.None);
         }
 
         public static void PerformWindowBuild(string path = _targetDir)
         {
-            string target_dir = _appName + ".exe";
-            GenericBuild(SCENES, path + "/" + target_dir, BuildTarget.StandaloneWindows64, BuildOptions.None);
+            string target_dir = CreateDirectories("windows", path) + ".exe";
+            GenericBuild(SCENES, target_dir, BuildTarget.StandaloneWindows64, BuildOptions.None);
+        }
+
+        private static string CreateDirectories(string platform, string path)
+        {
+            var appPath = path + "/" + _appName;
+
+            if (!System.IO.Directory.Exists(appPath))
+                System.IO.Directory.CreateDirectory(appPath);
+
+            var versionPath = appPath + "/" + PlayerSettings.bundleVersion;
+
+            if (!System.IO.Directory.Exists(versionPath))
+                System.IO.Directory.CreateDirectory(versionPath);
+
+
+            var platformPath = versionPath + "/" + platform;
+
+            if (!System.IO.Directory.Exists(platformPath))
+                System.IO.Directory.CreateDirectory(platformPath);
+
+        
+            return platformPath + "/" + _appName + "_" + PlayerSettings.bundleVersion;
+
+
         }
 
         private static string[] FindEnabledEditorScenes()
