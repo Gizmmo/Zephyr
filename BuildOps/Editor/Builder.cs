@@ -75,7 +75,10 @@ namespace Zephyr.BuildOps
             if (!System.IO.Directory.Exists(appPath))
                 System.IO.Directory.CreateDirectory(appPath);
 
-            var versionPath = appPath + "/" + PlayerSettings.bundleVersion;
+           var dateTime = DateTime.Now;
+            var date = dateTime.ToString("yyyyMMdd");
+
+            var versionPath = appPath + "/" + PlayerSettings.bundleVersion + "." + date;
 
             if (!System.IO.Directory.Exists(versionPath))
                 System.IO.Directory.CreateDirectory(versionPath);
@@ -85,9 +88,10 @@ namespace Zephyr.BuildOps
 
             if (!System.IO.Directory.Exists(platformPath))
                 System.IO.Directory.CreateDirectory(platformPath);
-
+  
+           
         
-            return platformPath + "/" + _appName + "_" + PlayerSettings.bundleVersion;
+            return platformPath + "/" + _appName + "_" + PlayerSettings.bundleVersion + "." + date;
 
 
         }
