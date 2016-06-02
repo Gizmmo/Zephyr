@@ -15,7 +15,7 @@ namespace Zephyr.BuildOps
         static string[] SCENES = FindEnabledEditorScenes();
 
         static string _appName = PlayerSettings.productName;
-        const string _targetDir = "/unity";
+        const string _targetDir = "~/";
 
         static void PerformBuild()
         {
