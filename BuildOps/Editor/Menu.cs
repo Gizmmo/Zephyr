@@ -51,7 +51,7 @@ namespace Zephyr.BuildOps
         [MenuItem("Tools/Build Ops/Load File")]
         private static void LoadScene()
         {
-            var path = EditorUtility.OpenFilePanel("Select Scene Xml", Settings.ResourceBuildOpsData, ".xml");
+            //var path = EditorUtility.OpenFilePanel("Select Scene Xml", Settings.ResourceBuildOpsData, ".xml");
         }
 
         /// <summary>

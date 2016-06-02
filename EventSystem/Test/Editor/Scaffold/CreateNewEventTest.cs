@@ -149,8 +149,6 @@ namespace Zephyr.EventSystem.Editor.Test.Scaffold
             //Act
             _createNewEvent.Scaffold();
 
-            var files = Directory.GetFiles(TestFolder);
-
             //Assert
             Assert.IsTrue(File.Exists(TestFolder + _event + "Listener.cs"));
             Assert.IsTrue(File.Exists(TestFolder + _event + "Event.cs"));

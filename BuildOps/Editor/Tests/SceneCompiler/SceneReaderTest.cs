@@ -14,13 +14,9 @@ namespace Zephyr.BuildOps.Tests.SceneCompilerTest
     {
         private static readonly string TestFolder = Settings.BuildOps + "Editor/Tests/";
         private static readonly string SceneCompilerPath = TestFolder + "Scenes/";
-        private static readonly string XmlTestFile = SceneCompilerPath + "testFile.xml";
         private static readonly string SceneContainerXml = TestFolder + "Fixtures/Resources/testData.xml";
         private static readonly string PlatformContainerXml = TestFolder + "Fixtures/Resources/testData_build.xml";
         private static readonly string BaseScene = SceneCompilerPath + "Base.unity";
-        private static readonly string SceneWithCube = SceneCompilerPath + "SceneWithCube.unity";
-        private static readonly string SceneWithSphere = SceneCompilerPath + "SceneWithSphere.unity";
-        private static readonly string platform = "mobile";
         private SceneReader _reader;
 
         [SetUp]
