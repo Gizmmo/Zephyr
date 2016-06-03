@@ -108,8 +108,8 @@ namespace Zephyr.BuildOps
             if (!System.IO.Directory.Exists(target_dir))
                 System.IO.Directory.CreateDirectory(target_dir);
             
-            BuildActionRunner.Instance.TriggerPreBuild();
-            BuildActionRunner.Instance.TriggerOnBuild();
+            //BuildActionRunner.Instance.TriggerPreBuild();
+            //BuildActionRunner.Instance.TriggerOnBuild();
             EditorUserBuildSettings.SwitchActiveBuildTarget(build_target);
             string res = BuildPipeline.BuildPlayer(scenes, target_dir, build_target, build_options);
             if (res.Length > 0)
