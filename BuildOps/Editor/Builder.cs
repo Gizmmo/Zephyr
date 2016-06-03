@@ -42,7 +42,7 @@ namespace Zephyr.BuildOps
 
         public static void PerformIOSBuild(string path = _targetDir)
         {
-            var tempDirectory = _targetDir + "/tempDir";
+            var tempDirectory = _targetDir + "tempDir";
             if (System.IO.Directory.Exists(tempDirectory))
             {
                 FileUtil.DeleteFileOrDirectory(tempDirectory); 
