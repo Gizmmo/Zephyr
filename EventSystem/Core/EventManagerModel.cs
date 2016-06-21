@@ -39,8 +39,10 @@ namespace Zephyr.EventSystem.Core
         #endregion
 
         #region Delegates and Events
+
         //Delegates that are used to store listeners.
         public delegate void EventDelegate<in T>(T e) where T : GameEvent;
+
         private delegate void EventDelegate(GameEvent e);
 
         #endregion
@@ -85,6 +87,12 @@ namespace Zephyr.EventSystem.Core
         public void RemoveListener<T>(EventDelegate<T> del) where T : GameEvent
         {
             var internalDelegate = RemoveDelegateLookupListener(del);
+            if (internalDelegate == null)
+            {
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("Deletegate of type " + typeof (T) + "was not found when removing a listener.");
+                return;
+            }
             RemoveOnceLookUpListener(internalDelegate);
             RemoveDelegateListener<T>(internalDelegate);
         }
@@ -129,17 +137,18 @@ namespace Zephyr.EventSystem.Core
         public void TriggerEvent(GameEvent e)
         {
             EventDelegate del;
+            var eventType = e.GetType();
 
-            if (_delegates.ContainsKey(e.GetType()) && _delegates.TryGetValue(e.GetType(), out del))
+            if (_delegates.TryGetValue(eventType, out del))
             {
                 //Run listeners with GameEvent
                 del.Invoke(e);
 
                 //Search and remove actioned lookups
-                RemoveActionedOnceLookups(e);
+                RemoveActionedOnceLookups(eventType);
             }
             else
-                Debug.LogWarning("Event: " + e.GetType() + " has no listeners");
+                Debug.LogWarning("Event: " + eventType + " has no listeners");
         }
 
         /// <summary>
@@ -243,15 +252,15 @@ namespace Zephyr.EventSystem.Core
             EventDelegate tempDel;
 
             //Find if the delegate with the k of Type T exists...
-            if (_delegates.TryGetValue(typeof(T), out tempDel))
+            if (_delegates.TryGetValue(typeof (T), out tempDel))
             {
                 //...if exists, add the internal delegate to delegate stored
-                _delegates[typeof(T)] = tempDel += internalDelegate;
+                _delegates[typeof (T)] = tempDel += internalDelegate;
             }
             else
             {
                 //...does not exist, add the interal deleagate as the value
-                _delegates[typeof(T)] = internalDelegate;
+                _delegates[typeof (T)] = internalDelegate;
             }
 
             return internalDelegate;
@@ -268,7 +277,7 @@ namespace Zephyr.EventSystem.Core
         {
             System.Delegate tempDel;
             if (_onceLookups.TryGetValue(internalDelegate, out tempDel))
-                 _onceLookups.Remove(internalDelegate);
+                _onceLookups.Remove(internalDelegate);
 
             return tempDel;
         }
@@ -277,21 +286,26 @@ namespace Zephyr.EventSystem.Core
         /// Look up actioned GameEvent in oncelookups, meaning they can only be actioned once. If found, remove
         /// that listener from all possible dictionaries.
         /// </summary>
-        /// <param name="e">GameEvent that was actioned.</param>
-        private void RemoveActionedOnceLookups(GameEvent e)
+        /// <param name="typeKey">The system.type object that acts as a key for the wanted delegate to remove.</param>
+        private void RemoveActionedOnceLookups(System.Type typeKey)
         {
+            EventDelegate foundDelgate;
+            if (!_delegates.TryGetValue(typeKey, out foundDelgate)) return;
+
+            if (foundDelgate == null) return;
+
             //Get all delegates stored in the delegate dict of the GameEvent type.
-            foreach (EventDelegate k in _delegates[e.GetType()].GetInvocationList())
+            foreach (EventDelegate k in foundDelgate.GetInvocationList())
             {
                 //if oncelookups does not have found key, skip to next key
                 if (!_onceLookups.ContainsKey(k)) continue;
 
                 //Key was found, so remove listener.
-                _delegates[e.GetType()] -= k;
+                _delegates[typeKey] -= k;
 
                 //If this empties the delegate list, remove it from the delegates dictionary
-                if (_delegates[e.GetType()] == null)
-                    _delegates.Remove(e.GetType());
+                if (_delegates[typeKey] == null)
+                    _delegates.Remove(typeKey);
 
                 //remove the oncelookup from the delegate lookup, then delete the oncelookup.
                 _delegateLookup.Remove(_onceLookups[k]);
@@ -311,16 +325,16 @@ namespace Zephyr.EventSystem.Core
         {
             EventDelegate tempDel;
             //If there is no delegates with Type t, return null.
-            if (!_delegates.TryGetValue(typeof(T), out tempDel)) return null;
+            if (!_delegates.TryGetValue(typeof (T), out tempDel)) return null;
 
             //DelegateList is found, remove delegate from list.
             if (internalDelegate != null) tempDel -= internalDelegate;
 
             //If there no delegates left in the list, remove list from dictionary
             if (tempDel == null)
-                _delegates.Remove(typeof(T));
+                _delegates.Remove(typeof (T));
             else
-                _delegates[typeof(T)] = tempDel;
+                _delegates[typeof (T)] = tempDel;
 
             return tempDel;
         }
@@ -332,7 +346,7 @@ namespace Zephyr.EventSystem.Core
         /// <typeparam name="T">Type of EventDelegate</typeparam>
         /// <param name="del">Delegate to be removed from lookup list.</param>
         /// <returns>If delegate is removed, return found delegate, else false.</returns>
-        private EventDelegate RemoveDelegateLookupListener<T>(EventDelegate<T> del) where T: GameEvent
+        private EventDelegate RemoveDelegateLookupListener<T>(EventDelegate<T> del) where T : GameEvent
         {
             EventDelegate internalDelegate;
             if (!_delegateLookup.TryGetValue(del, out internalDelegate)) return null;

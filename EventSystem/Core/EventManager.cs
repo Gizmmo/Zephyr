@@ -12,23 +12,21 @@ namespace Zephyr.EventSystem.Core
 
         public static EventManagerModel Instance
         {
-            get
-            {
-                if (_instance == null)
-                    _instance = new EventManagerModel();
-
-                return _instance;
-            }
+            get { return _instance ?? (_instance = new EventManagerModel()); }
         }
 
-        public void OnApplicationQuit()
+        protected override void OnDestroy()
         {
+            base.OnDestroy();
             if (_instance == null) return;
 
             _instance.ClearAll();
             _instance = null;
         }
 
-        private void Update() { Instance.ProcessEvents(); }
+        private void Update()
+        {
+            Instance.ProcessEvents();
+        }
     }
 }

@@ -16,7 +16,7 @@ namespace Zephyr.MonoBehaviours
         /// <summary>
         /// Runs when the gameobject or this component is destroyed.
         /// </summary>
-        private void OnDestroy()
+        protected virtual void OnDestroy()
         {
             if (GameRunner.IsAlive)
                 GameRunner.Instance.UnregisterUpdateableObject(this);
