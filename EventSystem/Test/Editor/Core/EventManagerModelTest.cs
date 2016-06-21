@@ -16,7 +16,7 @@ namespace Zephyr.EventSystem.Editor.Test.Core
         public void IsQueueInstantiatedEmpty() { Assert.AreEqual(0, _manager.QueueSize()); }
 
         [Test]
-        public void IsDelegatesEmptyOnStart() { Assert.IsTrue(_manager.IsDelegatesEmpty()); }
+        public void IsDelegatesEmptyOnStart() { Assert.IsTrue(_manager.HasListeners()); }
 
         public void OnCall(GameEvent evt) { }
 
@@ -31,7 +31,7 @@ namespace Zephyr.EventSystem.Editor.Test.Core
         public void DoesAddListenerAddToDelegates()
         {
             _manager.AddListener<GameEvent>(OnCall);
-            Assert.IsFalse(_manager.IsDelegatesEmpty());
+            Assert.IsFalse(_manager.HasListeners());
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace Zephyr.EventSystem.Editor.Test.Core
         public void DoessAddListenerOnceAddToDelegates()
         {
             _manager.AddListenerOnce<GameEvent>(OnCall);
-            Assert.IsFalse(_manager.IsDelegatesEmpty());
+            Assert.IsFalse(_manager.HasListeners());
         }
 
         [Test]
@@ -61,7 +61,7 @@ namespace Zephyr.EventSystem.Editor.Test.Core
         {
             _manager.AddListener<GameEvent>(OnCall);
             _manager.RemoveListener<GameEvent>(OnCall);
-            Assert.IsTrue(_manager.IsDelegatesEmpty());
+            Assert.IsTrue(_manager.HasListeners());
         }
 
         [Test]
@@ -77,14 +77,14 @@ namespace Zephyr.EventSystem.Editor.Test.Core
         {
             _manager.AddListenerOnce<GameEvent>(OnCall);
             _manager.RemoveListener<GameEvent>(OnCall);
-            Assert.IsTrue(_manager.IsDelegatesEmpty());
+            Assert.IsTrue(_manager.HasListeners());
         }
 
         [Test]
         public void DoesRemoveAllClearListeners()
         {
             _manager.AddListener<GameEvent>(OnCall);
-            _manager.RemoveAll();
+            _manager.RemoveListeners();
             Assert.IsFalse(_manager.HasListener<GameEvent>(OnCall));
         }
 
@@ -92,15 +92,15 @@ namespace Zephyr.EventSystem.Editor.Test.Core
         public void DoesRemoveAllClearDelegates()
         {
             _manager.AddListener<GameEvent>(OnCall);
-            _manager.RemoveAll();
-            Assert.IsTrue(_manager.IsDelegatesEmpty());
+            _manager.RemoveListeners();
+            Assert.IsTrue(_manager.HasListeners());
         }
 
         [Test]
         public void DoesRemoveClearAllEventsQueued()
         {
             _manager.QueueEvent(new GameEvent());
-            _manager.RemoveAll();
+            _manager.RemoveListeners();
             Assert.IsTrue(_manager.IsQueueEmpty());
         }
 
@@ -116,7 +116,7 @@ namespace Zephyr.EventSystem.Editor.Test.Core
         public void DoesQueueEventTriggerEventOnUpdate()
         {
             _manager.QueueEvent(new GameEvent());
-            _manager.OnUpdate();
+            _manager.ProcessEvents();
         }
 
         [Test]
@@ -127,7 +127,7 @@ namespace Zephyr.EventSystem.Editor.Test.Core
             _manager.QueueEvent(new GameEvent());
 
             //Act
-            _manager.OnUpdate();
+            _manager.ProcessEvents();
 
             //Assert
             Assert.AreEqual(0, _manager.QueueSize());
@@ -141,7 +141,7 @@ namespace Zephyr.EventSystem.Editor.Test.Core
             _manager.QueueEvent(new GameEvent());
 
             //Act
-            _manager.OnUpdate();
+            _manager.ProcessEvents();
             _manager.AddListenerOnce<GameEvent>(OnCall);
 
             //Assert
@@ -158,7 +158,7 @@ namespace Zephyr.EventSystem.Editor.Test.Core
 
             //Act
             _manager.AddListenerOnce<GameEvent>(OnCall);
-            _manager.OnUpdate();
+            _manager.ProcessEvents();
 
             //Assert
             Assert.IsFalse(_manager.HasListener<GameEvent>(OnCall));

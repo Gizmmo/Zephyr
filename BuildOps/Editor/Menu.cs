@@ -1,10 +1,5 @@
 ﻿using Zephyr.BuildOps.SceneCompiler;
 using UnityEditor;
-using BuildOps.BuildActions;
-using System;
-using UnityEngine;
-using HutongGames.PlayMaker;
-using Zephyr.BuildOps;
 
 namespace Zephyr.BuildOps
 {

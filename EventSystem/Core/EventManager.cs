@@ -25,10 +25,10 @@ namespace Zephyr.EventSystem.Core
         {
             if (_instance == null) return;
 
-            _instance.OnApplicationQuit();
+            _instance.ClearAll();
             _instance = null;
         }
 
-        private void Update() { Instance.OnUpdate(); }
+        private void Update() { Instance.ProcessEvents(); }
     }
 }
