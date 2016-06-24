@@ -1,4 +1,5 @@
-﻿using Zephyr.StateMachine.Core;
+﻿using System;
+using Zephyr.StateMachine.Core;
 using NUnit.Framework;
 
 namespace Zephyr.StateMachine.Test.Editor.Core
@@ -7,155 +8,283 @@ namespace Zephyr.StateMachine.Test.Editor.Core
     [Category("FsmCore")]
     public abstract class FsmTest
     {
-        private Fsm _fsm;
+        private Fsm<ConcreteState> _fsm;
 
         [SetUp]
         public virtual void Init()
         {
-            _fsm = new Fsm();
+            _fsm = new Fsm<ConcreteState>();
+        }
+
+        protected void AddStateAt(int state)
+        {
+            switch (state)
+            {
+                case 0:
+                    _fsm.AddState<StateOne>();
+                    break;
+                case 1:
+                    _fsm.AddState<StateTwo>();
+                    break;
+                case 2:
+                    _fsm.AddState<StateThree>();
+                    break;
+                case 3:
+                    _fsm.AddState<StateFour>();
+                    break;
+                case 4:
+                    _fsm.AddState<StateFive>();
+                    break;
+            }
+        }
+
+        protected void RemoveStateAt(int state)
+        {
+            switch (state)
+            {
+                case 0:
+                    _fsm.RemoveState<StateOne>();
+                    break;
+                case 1:
+                    _fsm.RemoveState<StateTwo>();
+                    break;
+                case 2:
+                    _fsm.RemoveState<StateThree>();
+                    break;
+                case 3:
+                    _fsm.RemoveState<StateFour>();
+                    break;
+                case 4:
+                    _fsm.RemoveState<StateFive>();
+                    break;
+            }
         }
 
         public abstract class AddAndRemovalTests : FsmTest
         {
-            private static object[] _stateCases =
+            protected void AddStates(int stateCount)
             {
-                new object[] {new StateOne()},
-                new object[] {new StateOne(), new StateTwo()},
-                new object[] {new StateOne(), new StateTwo(), new StateThree()},
-                new object[] {new StateOne(), new StateTwo(), new StateThree(), new StateFour()},
-                new object[] {new StateOne(), new StateTwo(), new StateThree(), new StateFour(), new StateFive()}
-            };
+                //Act
+                for (var i = 0; i < stateCount; i++)
+                    AddStateAt(i);
+            }
 
-            public class AddStateTests : AddAndRemovalTests {
-                [Test, TestCaseSource("_stateCases")]
-                public void DoesAddingAStateToAnFsmShouldIncreaseTheAmountOfStatesByOne(object[] states)
+            protected void RemoveStates(int stateCount)
+            {
+                //Act
+                for (var i = 0; i < stateCount; i++)
+                    RemoveStateAt(i);
+            }
+
+            public class AddStateTests : AddAndRemovalTests
+            {
+                [Test]
+                [TestCase(1, TestName = "OneStateAdd")]
+                [TestCase(2, TestName = "TwoStateAdds")]
+                [TestCase(3, TestName = "ThreeStateAdds")]
+                [TestCase(4, TestName = "FourStateAdds")]
+                [TestCase(5, TestName = "FiveStateAdds")]
+                public void DoesAddingAGenericStateIncreasetheStateCount(int stateCount)
                 {
                     //Arrange
-                    var count = 0;
-                    
-                    //Act
-                    foreach (var state in states)
-                    {
-                        _fsm.AddState(state as StateMachine.Core.IState);
-                        count++;
 
-                        //Assert
-                        Assert.AreEqual(count, _fsm.StateCount);
-                    }
+                    //Act
+                    AddStates(stateCount);
+
+                    //Assert
+                    Assert.AreEqual(stateCount, _fsm.StateCount);
                 }
             }
 
-            public class RemoveStateTests : AddAndRemovalTests {
+            public class RemoveStateTests : AddAndRemovalTests
+            {
+
                 [Test]
-                public void DoesRemovingAStateFromFsmUsingGenericDecreaseTheAmountOfStatesByOne()
+                [TestCase(1, TestName = "OneStateRemove")]
+                [TestCase(2, TestName = "TwoStateRemoves")]
+                [TestCase(3, TestName = "ThreeStateRemoves")]
+                [TestCase(4, TestName = "FourStateRemoves")]
+                [TestCase(5, TestName = "FiveStateRemoves")]
+                public void DoesRemovingAStateFromFsmDecreaseTheStateCount(int stateCount)
                 {
-                    var currentStateCount = _fsm.StateCount;
-                    _fsm.RemoveState<StateOne>();
-                    Assert.AreEqual(currentStateCount - 1, _fsm.StateCount);
-                }
-
-                [Test, TestCaseSource("_stateCases")]
-                public void DoesRemovingAStateFromFsmDecreaseTheAmountOfStatesByOne(object[] states)
-                {
+                    var maxStates = 5;
                     //Arrange
-                    foreach (var state in states)
-                        _fsm.AddState(state as StateMachine.Core.IState);
+                    AddStates(maxStates);
 
-                    var count = states.Length;
+                    var count = maxStates - stateCount;
+
 
                     //Act
-                    foreach (var state in states)
-                    {
-                        _fsm.RemoveState(state.GetType());
-                        count--;
-
-                        //Assert
-                        Assert.AreEqual(count, _fsm.StateCount);
-                    }
+                    RemoveStates(stateCount);
+                    Assert.AreEqual(count, _fsm.StateCount);
                 }
+            }
+
+            [Test]
+            public void DoesRemovingAStateThatIsNotInTheFsmThrowAStateDoesNotExistException()
+            {
+                Assert.Throws(typeof (StateDoesNotExistException), _fsm.RemoveState<StateFive>);
+            }
+
+            [Test]
+            public void DoesRemovingTheCurrentStateThrowARemoveCurrentStateException()
+            {
+                //Arrange
+                AddStateAt(0);
+                _fsm.SetInitialState<StateOne>();
+
+                //Act
+                _fsm.Start();
+
+                //Assert
+                Assert.Throws(typeof (RemoveCurrentStateException), _fsm.RemoveState<StateOne>);
             }
         }
 
+        public class InitalizeTests : FsmTest
+        {
+            [Test]
+            public void DoesInitalStateSetTheInitialState()
+            {
+                //Arrange
+                AddStateAt(0);
 
-        public class AllTests : FsmTest
+                //Act
+                _fsm.SetInitialState<StateOne>();
+
+                //Assert
+                Assert.AreEqual(typeof (StateOne), _fsm.InitalState);
+            }
+
+            [Test]
+            public void DoesSettingTheInitalStateWhenThatStateIsNotInTheFsmThrowStateDoesNotExistException()
+            {
+                //Assert
+                Assert.Throws(typeof (StateDoesNotExistException), _fsm.SetInitialState<StateOne>);
+            }
+        }
+
+        public class StartTests : FsmTest
         {
             public override void Init()
             {
                 base.Init();
-                _fsm.AddState<StateOne>();
-            }
-
-            [Test]
-            public void DoesInitalStateSetTheInitialState()
-            {
-                _fsm.SetInitialState<StateOne>();
-                Assert.AreEqual(typeof (StateOne), _fsm.InitalState);
+                AddStateAt(0);
             }
 
             [Test]
             public void IsCurrentStateNullBeforeStartIsCalled()
             {
+                //Assert
                 Assert.IsNull(_fsm.CurrentState);
             }
 
             [Test]
             public void DoesCallingStartWithoutAnInitialStateThrowAnInitalStateNullException()
             {
+                //Assert
                 Assert.Throws(typeof (InitalStateNullException), _fsm.Start);
             }
 
             [Test]
             public void DoesCallingStartWithAnIntialStateMakeThatStateTheCurrentState()
             {
+                //Arrange
+                _fsm.SetInitialState<StateOne>();
+
+                //Act
+                _fsm.Start();
+
+                //Assert
+                Assert.AreEqual(typeof (StateOne), _fsm.CurrentState.GetType());
+            }
+        }
+
+        public class CurrestStateTests : FsmTest
+        {
+            public override void Init()
+            {
+                base.Init();
+                AddStateAt(0);
                 _fsm.SetInitialState<StateOne>();
                 _fsm.Start();
-                Assert.AreEqual(typeof(StateOne), _fsm.CurrentState.GetType());
             }
 
-//        [Test]
-//        public void DoesCallingAnInheritedMethodCallTheCurrectStateMethod()
-//        {
-//            Assert.AreEqual(0, _fsm.CurrentState.ReturnZero());
-//        }
+            [Test]
+            public void DoesCallingACurrentStateMethodCallTheSharedMethod()
+            {
+                //Assert
+                Assert.AreEqual(0, _fsm.CurrentState.ReturnZero());
+            }
+
+            [Test]
+            public void DoesCallingACurrentStateMethodCallTheOverriddenMethod()
+            {
+                //Assert
+                Assert.AreEqual(1, _fsm.CurrentState.ReturnStateNumber());
+            }
+
+            [Test]
+            public void DoesSetCurrentStateChangeTheStateToThePassedType()
+            {
+                //Arrange
+                _fsm.AddState<StateTwo>();
+
+                //Act
+                _fsm.SetCurrentState<StateTwo>();
+
+                //Assert
+                Assert.AreEqual(typeof (StateTwo), _fsm.CurrentState.GetType());
+            }
         }
 
-        public class StateOne : StateMachine.Core.IState
+        public abstract class ConcreteState : StateMachine.Core.IState
         {
             public int ReturnZero()
             {
                 return 0;
             }
+
+            public abstract int ReturnStateNumber();
         }
 
-        public class StateTwo : StateMachine.Core.IState
+        public class StateOne : ConcreteState
         {
-            public int ReturnZero()
+            public override int ReturnStateNumber()
             {
-                return 0;
+                return 1;
             }
         }
 
-        public class StateThree : StateMachine.Core.IState
+        public class StateTwo : ConcreteState
         {
-            public int ReturnZero()
+            public override int ReturnStateNumber()
             {
-                return 0;
+                return 2;
             }
         }
 
-        public class StateFour : StateMachine.Core.IState
+        public class StateThree : ConcreteState
         {
-            public int ReturnZero()
+            public override int ReturnStateNumber()
             {
-                return 0;
+                return 3;
             }
         }
 
-        public class StateFive : StateMachine.Core.IState
+        public class StateFour : ConcreteState
         {
-            public int ReturnZero()
+            public override int ReturnStateNumber()
             {
-                return 0;
+                return 4;
+            }
+        }
+
+        public class StateFive : ConcreteState
+        {
+            public override int ReturnStateNumber()
+            {
+                return 5;
             }
         }
     }
