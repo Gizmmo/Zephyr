@@ -1,7 +1,6 @@
 ﻿namespace Zephyr.StateMachine.Core
 {
-    public interface IState
+    public interface ITransition
     {
-        void OnEntry();
     }
 }

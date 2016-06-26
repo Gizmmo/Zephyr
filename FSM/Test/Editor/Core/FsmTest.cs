@@ -1,5 +1,4 @@
-﻿using System;
-using Zephyr.StateMachine.Core;
+﻿using Zephyr.StateMachine.Core;
 using NUnit.Framework;
 
 namespace Zephyr.StateMachine.Test.Editor.Core
@@ -76,6 +75,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                     RemoveStateAt(i);
             }
 
+
             public class AddStateTests : AddAndRemovalTests
             {
                 [Test]
@@ -84,21 +84,32 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 [TestCase(3, TestName = "ThreeStateAdds")]
                 [TestCase(4, TestName = "FourStateAdds")]
                 [TestCase(5, TestName = "FiveStateAdds")]
-                public void DoesAddingAGenericStateIncreasetheStateCount(int stateCount)
+                public void DoesAddingAGenericStateIncreasetheStateCount(int amountOfStatesAdded)
                 {
                     //Arrange
 
                     //Act
-                    AddStates(stateCount);
+                    AddStates(amountOfStatesAdded);
 
                     //Assert
-                    Assert.AreEqual(stateCount, _fsm.StateCount);
+                    Assert.That(_fsm.StateCount, Is.EqualTo(amountOfStatesAdded));
+                }
+
+                [Test]
+                public void DoesAddingAStateThatAlreadyExistsThrowADuplicateStateException()
+                {
+                    //Arrange
+                    _fsm.AddState<StateOne>();
+
+                    //Act
+
+                    //Assert
+                    Assert.Throws<DuplicateStateException>(_fsm.AddState<StateOne>);
                 }
             }
 
             public class RemoveStateTests : AddAndRemovalTests
             {
-
                 [Test]
                 [TestCase(1, TestName = "OneStateRemove")]
                 [TestCase(2, TestName = "TwoStateRemoves")]
@@ -107,23 +118,23 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 [TestCase(5, TestName = "FiveStateRemoves")]
                 public void DoesRemovingAStateFromFsmDecreaseTheStateCount(int stateCount)
                 {
-                    var maxStates = 5;
                     //Arrange
+                    const int maxStates = 5;
                     AddStates(maxStates);
-
-                    var count = maxStates - stateCount;
-
+                    var expectedRemainingStatesCount = maxStates - stateCount;
 
                     //Act
                     RemoveStates(stateCount);
-                    Assert.AreEqual(count, _fsm.StateCount);
+
+                    //Assert
+                    Assert.That(_fsm.StateCount, Is.EqualTo(expectedRemainingStatesCount));
                 }
             }
 
             [Test]
-            public void DoesRemovingAStateThatIsNotInTheFsmThrowAStateDoesNotExistException()
+            public void DoesRemovingAStateThatIsNotInTheFsmThrowAStateNotFoundException()
             {
-                Assert.Throws(typeof (StateDoesNotExistException), _fsm.RemoveState<StateFive>);
+                Assert.Throws<StateNotFoundException>(_fsm.RemoveState<StateFive>);
             }
 
             [Test]
@@ -137,7 +148,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 _fsm.Start();
 
                 //Assert
-                Assert.Throws(typeof (RemoveCurrentStateException), _fsm.RemoveState<StateOne>);
+                Assert.Throws<RemoveCurrentStateException>(_fsm.RemoveState<StateOne>);
             }
         }
 
@@ -147,20 +158,21 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public void DoesInitalStateSetTheInitialState()
             {
                 //Arrange
+                var initalStateType = typeof(StateOne);
                 AddStateAt(0);
 
                 //Act
                 _fsm.SetInitialState<StateOne>();
 
                 //Assert
-                Assert.AreEqual(typeof (StateOne), _fsm.InitalState);
+                Assert.That(_fsm.InitalState, Is.EqualTo(initalStateType));
             }
 
             [Test]
-            public void DoesSettingTheInitalStateWhenThatStateIsNotInTheFsmThrowStateDoesNotExistException()
+            public void DoesSettingTheInitalStateWhenThatStateIsNotInTheFsmThrowStateNotFoundException()
             {
                 //Assert
-                Assert.Throws(typeof (StateDoesNotExistException), _fsm.SetInitialState<StateOne>);
+                Assert.Throws<StateNotFoundException>(_fsm.SetInitialState<StateOne>);
             }
         }
 
@@ -176,76 +188,118 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public void IsCurrentStateNullBeforeStartIsCalled()
             {
                 //Assert
-                Assert.IsNull(_fsm.CurrentState);
+                Assert.That(_fsm.CurrentState, Is.Null);
             }
 
             [Test]
             public void DoesCallingStartWithoutAnInitialStateThrowAnInitalStateNullException()
             {
                 //Assert
-                Assert.Throws(typeof (InitalStateNullException), _fsm.Start);
+                Assert.Throws<InitalStateNullException>(_fsm.Start);
             }
 
             [Test]
             public void DoesCallingStartWithAnIntialStateMakeThatStateTheCurrentState()
             {
                 //Arrange
-                _fsm.SetInitialState<StateOne>();
+                var initialStateType = typeof(StateOne);
+
 
                 //Act
+                _fsm.SetInitialState<StateOne>();
                 _fsm.Start();
+                var currentStateType = _fsm.CurrentState.GetType();
 
                 //Assert
-                Assert.AreEqual(typeof (StateOne), _fsm.CurrentState.GetType());
+                Assert.That(currentStateType, Is.EqualTo(initialStateType));
             }
         }
 
-        public class CurrestStateTests : FsmTest
+        public class CurrentStateTests : FsmTest
         {
             public override void Init()
             {
                 base.Init();
                 AddStateAt(0);
                 _fsm.SetInitialState<StateOne>();
-                _fsm.Start();
             }
 
             [Test]
             public void DoesCallingACurrentStateMethodCallTheSharedMethod()
             {
+                //Arrange
+                const int returnNumber = 0;
+
+                //Act
+                _fsm.Start();
+                var sharedMethodWasCalled = returnNumber == _fsm.CurrentState.ReturnZero();
+
                 //Assert
-                Assert.AreEqual(0, _fsm.CurrentState.ReturnZero());
+                Assert.That(sharedMethodWasCalled);
             }
 
             [Test]
             public void DoesCallingACurrentStateMethodCallTheOverriddenMethod()
             {
+                //Arrange
+                const int returnNumber = 1;
+
+                //Act
+                _fsm.Start();
+                var overiddenMethodWasCalled = returnNumber == _fsm.CurrentState.ReturnStateNumber();
+
                 //Assert
-                Assert.AreEqual(1, _fsm.CurrentState.ReturnStateNumber());
+                Assert.That(overiddenMethodWasCalled);
             }
 
             [Test]
-            public void DoesSetCurrentStateChangeTheStateToThePassedType()
+            public void DoesSettingToCurrentStateCauseOnEntryToBeCalled()
             {
                 //Arrange
-                _fsm.AddState<StateTwo>();
 
                 //Act
-                _fsm.SetCurrentState<StateTwo>();
+                _fsm.Start();
+                var entryWasCalled = _fsm.CurrentState.IsEntryCalled;
 
                 //Assert
-                Assert.AreEqual(typeof (StateTwo), _fsm.CurrentState.GetType());
+                Assert.That(entryWasCalled);
             }
         }
 
-        public abstract class ConcreteState : StateMachine.Core.IState
+        public class AddTransitionTests : FsmTest
         {
+            public override void Init()
+            {
+                base.Init();
+                AddStateAt(0);
+                AddStateAt(1);
+                _fsm.SetInitialState<StateOne>();
+            }
+
+            [Test]
+            public void DoesAddingATransitionBetweenTwoStatesNotReturnAnError()
+            {
+                Assert.DoesNotThrow(_fsm.AddTransition<StateOneToStateTwoTransition, StateOne, StateTwo>);
+            }
+        }
+
+        //TODO: Check for a state not found exception on transition!!!!!
+
+        public abstract class ConcreteState : IState
+        {
+            public bool IsEntryCalled { get; private set; }
+
             public int ReturnZero()
             {
                 return 0;
             }
 
             public abstract int ReturnStateNumber();
+
+            public virtual void OnEntry()
+            {
+                IsEntryCalled = true;
+            }
         }
 
         public class StateOne : ConcreteState
@@ -286,6 +340,11 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             {
                 return 5;
             }
+        }
+
+        public class StateOneToStateTwoTransition : ITransition
+        {
+            
         }
     }
 }
