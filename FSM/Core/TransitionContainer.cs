@@ -7,10 +7,10 @@ namespace Zephyr.StateMachine.Core
         where TTransition : ITransition
         where TStateTo : IState
     {
-        public TransitionContainer()
+        public TransitionContainer(TTransition transition)
         {
             StateTo = typeof(TStateTo);
-            Transition = Activator.CreateInstance<TTransition>();
+            Transition = transition;
         }
 
         public Type StateTo { get; private set; }

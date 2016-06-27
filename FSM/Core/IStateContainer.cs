@@ -6,8 +6,8 @@
 
         TTransition GetTransition<TTransition>() where TTransition : ITransition;
 
-        void AddTransition<TTransition, TStateTo>() where TTransition : class, ITransition, new()
-            where TStateTo : class, IState, new();
+        void AddTransition<TTransition, TStateTo>(TTransition transition) where TTransition : ITransition
+            where TStateTo : IState;
 
         void RemoveTransition<TTransition>() where TTransition : ITransition;
     }

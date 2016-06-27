@@ -19,13 +19,13 @@ namespace Zephyr.StateMachine.Core
         /// Adds a State to the State Machine 
         /// </summary>
         /// <typeparam name="TSub">The IState Class to add to the state machine</typeparam>
-        public void AddState<TSub>() where TSub : T, new() {
+        public void AddState<TSub>(TSub state) where TSub : T, new() {
             var key = typeof(TSub);
 
             if (_states.ContainsKey(key))
                 throw new DuplicateStateException();
 
-            _states.Add(typeof(TSub), Activator.CreateInstance<TSub>());
+            _states.Add(typeof(TSub), state);
         }
 
         /// <summary>
@@ -68,9 +68,11 @@ namespace Zephyr.StateMachine.Core
             CurrentState.OnEntry();
         }
 
-        public void AddTransition<TTransition, TConcreteFrom, TConcreteTo>() where TTransition : ITransition, new() where TConcreteFrom : T, new() where TConcreteTo : T, new() {
+        public void AddTransition<TTransition, TStateFrom, TStateTo>(TTransition transition) where TTransition : ITransition, new() where TStateFrom : T, new() where TStateTo : T, new()
+        {
             throw new NotImplementedException();
         }
+
 
         /// <summary>
         /// Sets the current state to the passed generic state.
