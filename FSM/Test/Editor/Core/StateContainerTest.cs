@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using NSubstitute;
+using NUnit.Framework;
 using Zephyr.StateMachine.Core;
 
 namespace Zephyr.StateMachine.Test.Editor.Core
@@ -7,24 +8,43 @@ namespace Zephyr.StateMachine.Test.Editor.Core
     [Category("FsmStateContainer")]
     public class StateContainerTest
     {
-        private StateContainer<TestState> _container;
+        private StateContainer _container;
+        private static bool _wasTriggered;
 
         [SetUp]
         public virtual void Init()
         {
+            _wasTriggered = false;
         }
 
         protected void AddTransition(int transitionNum)
         {
-            switch (transitionNum) {
+            switch (transitionNum)
+            {
                 case 0:
-                    _container.AddTransition<TransitionOne, StateTwo>();
+                    _container.AddTransition(new TransitionOne(), typeof(StateTwo));
                     break;
                 case 1:
-                    _container.AddTransition<TransitionTwo, StateTwo>();
+                    _container.AddTransition(new TransitionTwo(), typeof(StateTwo));
                     break;
                 case 2:
-                    _container.AddTransition<TransitionThree, StateTwo>();
+                    _container.AddTransition(new TransitionThree(), typeof(StateTwo));
+                    break;
+            }
+        }
+
+        protected void RemoveTransition(int transitionNum)
+        {
+            switch (transitionNum)
+            {
+                case 0:
+                    _container.RemoveTransition<TransitionOne>();
+                    break;
+                case 1:
+                    _container.RemoveTransition<TransitionTwo>();
+                    break;
+                case 2:
+                    _container.RemoveTransition<TransitionThree>();
                     break;
             }
         }
@@ -37,7 +57,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 //Arrange
                 var stateType = typeof(TestState);
                 //Act
-                _container = new StateContainer<TestState>();
+                _container = new StateContainer(new TestState());
                 var containerStateType = _container.State.GetType();
 
                 //Assert
@@ -50,7 +70,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public override void Init()
             {
                 base.Init();
-                _container = new StateContainer<TestState>();
+                _container = new StateContainer(new TestState());
             }
 
             [Test]
@@ -63,26 +83,144 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 //Arrange
 
                 //Act
-                for(var i = 0; i < amountOfTransitionsToAdd; i++)
+                for (var i = 0; i < amountOfTransitionsToAdd; i++)
                     AddTransition(i);
 
                 //Assert
                 Assert.That(_container.TransitionCount, Is.EqualTo(amountOfTransitionsToAdd));
             }
+
+            [Test]
+            public void DoesAddingTheSameTransitionCauseADuplicateStateTransitionException()
+            {
+                //Arrange
+                AddSimpleTransition();
+                //Act
+
+                //Assert
+                Assert.Throws<DuplicateStateTransitionException>(AddSimpleTransition);
+            }
+
+            [Test]
+            public void DoesGetTransitionReturnTheExpectedTransitionInTheContainer()
+            {
+                //Arrange
+                var originalTransition = new TransitionOne();
+                _container.AddTransition(originalTransition, typeof(StateTwo));
+
+                //Act
+                var returnedTransition = _container.GetTransition<TransitionOne>().Transition;
+
+                //Assert
+                Assert.That(returnedTransition, Is.EqualTo(originalTransition));
+            }
+
+            [Test]
+            public void DoesGetTransitionReturnTheExpectedStateToInTheContainer()
+            {
+                //Arrange
+                var originalStateTo = typeof(StateTwo);
+                _container.AddTransition(new TransitionOne(), originalStateTo);
+
+                //Act
+                var returnedTransition = _container.GetTransition<TransitionOne>().StateTo;
+
+                //Assert
+                Assert.That(returnedTransition, Is.EqualTo(originalStateTo));
+            }
+
+            [Test]
+            public void DoesGetTransitionThrowTransitionNotFoundExceptionIfTheTransitionWasNotAdded()
+            {
+                //Arrange
+
+                //Act
+
+                //Assert
+                Assert.Throws<TransitionNotFoundException>(() => { _container.GetTransition<TransitionOne>(); });
+            }
+
+            [Test]
+            [TestCase(0, TestName = "ZeroTransitionRemove")]
+            [TestCase(1, TestName = "OneTransitionRemove")]
+            [TestCase(2, TestName = "TwoTransitionRemove")]
+            [TestCase(3, TestName = "ThreeTransitionRemove")]
+            public void DoesRemoveTransitionLowerTheTransitionCount(int amountOfTransitionsToRemove)
+            {
+                //Arrange
+                const int maxAmount = 3;
+                for (var i = 0; i < maxAmount; i++)
+                    AddTransition(i);
+
+                var expectedTransitionsLeft = maxAmount - amountOfTransitionsToRemove;
+
+                //Act
+                for (var i = 0; i < amountOfTransitionsToRemove; i++)
+                    RemoveTransition(i);
+
+                //Assert
+                Assert.That(_container.TransitionCount, Is.EqualTo(expectedTransitionsLeft));
+            }
+
+            [Test]
+            public void DoesRemovingATransitionThatDoesExistReturnTrue()
+            {
+                //Arrange
+                AddSimpleTransition();
+                //Act
+                var removeReturnValue = _container.RemoveTransition<TransitionOne>();
+
+                //Assert
+                Assert.That(removeReturnValue, Is.True);
+            }
+
+            [Test]
+            public void DoesRemovingATransitionThatDoesNotExistReturnFalse()
+            {
+                //Arrange
+
+                //Act
+                var removeReturnValue = _container.RemoveTransition<TransitionOne>();
+
+                //Assert
+                Assert.That(removeReturnValue, Is.False);
+            }
+
+            [Test]
+            public void DoesCallingTriggerOnATransitionReturnTheStateTo()
+            {
+                //Arrange
+                var stateThatIsSet = typeof(StateTwo);
+                _container.AddTransition(new TransitionOne(), stateThatIsSet);
+
+                //Act
+                var stateToReturn = _container.TriggerTransition<TransitionOne>();
+
+                //Assert
+                Assert.That(stateToReturn, Is.EqualTo(stateThatIsSet));
+            }
+
+            [Test]
+            public void DoesCallingTriggerOnATransitionCallTheTriggerMethod()
+            {
+                //Arrange
+                _container.AddTransition(new TransitionOne(), typeof(StateTwo));
+
+                //Act
+                _container.TriggerTransition<TransitionOne>();
+
+                //Assert
+                Assert.That(_wasTriggered, Is.True);
+            }
+
+            /// <summary>
+            /// Used to add a simple transition to the container using TransitionOne and StateTwo
+            /// </summary>
+            private void AddSimpleTransition()
+            {
+                _container.AddTransition(new TransitionOne(), typeof(StateTwo));
+            }
         }
-//
-//                [Test]
-//                public void DoesAddingAStateThatAlreadyExistsThrowADuplicateStateException()
-//                {
-//                    //Arrange
-//                    _fsm.AddState<StateOne>();
-//
-//                    //Act
-//
-//                    //Assert
-//                    Assert.Throws<DuplicateStateException>(_fsm.AddState<StateOne>);
-//                }
-//            }
 
         public class TestState : IState
         {
@@ -98,15 +236,24 @@ namespace Zephyr.StateMachine.Test.Editor.Core
 
         public class TransitionOne : ITransition
         {
-            
+            public void Trigger()
+            {
+                _wasTriggered = true;
+            }
         }
 
-        public class TransitionTwo : ITransition {
-
+        public class TransitionTwo : ITransition
+        {
+            public void Trigger()
+            {
+            }
         }
 
-        public class TransitionThree : ITransition {
-
+        public class TransitionThree : ITransition
+        {
+            public void Trigger()
+            {
+            }
         }
     }
 }

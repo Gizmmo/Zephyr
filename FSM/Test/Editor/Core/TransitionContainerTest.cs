@@ -7,12 +7,12 @@ namespace Zephyr.StateMachine.Test.Editor.Core
     [Category("FsmTransitionContainer")]
     public class TransitionContainerTest
     {
-        private TransitionContainer<TransitionOne, StateTwo> _container;
+        private TransitionContainer _container;
 
         [SetUp]
         public void Init()
         {
-            _container = new TransitionContainer<TransitionOne, StateTwo>();
+            _container = new TransitionContainer(new TransitionOne(), typeof(StateTwo));
         }
 
         [Test]
@@ -68,13 +68,22 @@ namespace Zephyr.StateMachine.Test.Editor.Core
 
     public class TransitionOne : ITransition
     {
+        public void Trigger()
+        {
+        }
     }
 
     public class TransitionTwo : ITransition
     {
+        public void Trigger()
+        {
+        }
     }
 
     public class TransitionThree : ITransition
     {
+        public void Trigger()
+        {
+        }
     }
 }

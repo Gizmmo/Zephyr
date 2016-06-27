@@ -11,31 +11,34 @@ namespace Zephyr.StateMachine.Core
         }
 
         public Type InitalState { get; private set; }
-        public T CurrentState { get; private set; }
+        public T State { get; private set; }
+        private StateContainer _currentStateContainer;
 
-        private Dictionary<Type, StateContainer<T>> _states = new Dictionary<Type, StateContainer<T>>();
+        private Dictionary<Type, StateContainer> _states = new Dictionary<Type, StateContainer>();
 
         /// <summary>
         /// Adds a State to the State Machine 
         /// </summary>
         /// <typeparam name="TSub">The IState Class to add to the state machine</typeparam>
-        public void AddState<TSub>(TSub state) where TSub : T, new() {
-            var key = typeof(TSub);
+        public void AddState(IState state)
+        {
+            var key = state.GetType();
 
             if (_states.ContainsKey(key))
                 throw new DuplicateStateException();
 
-            _states.Add(typeof(TSub), state);
+            _states.Add(key, new StateContainer(state));
         }
 
         /// <summary>
         /// Removes a State from the state machine.
         /// </summary>
         /// <typeparam name="TSub">The IState class to remove from the state machine.</typeparam>
-        public void RemoveState<TSub>() where TSub : T, new() {
+        public void RemoveState<TSub>() where TSub : T, new()
+        {
             var key = typeof(TSub);
 
-            if (CurrentState != null && CurrentState.GetType() == key)
+            if (State != null && State.GetType() == key)
                 throw new RemoveCurrentStateException();
 
             if (!_states.ContainsKey(key))
@@ -48,10 +51,12 @@ namespace Zephyr.StateMachine.Core
         /// Sets the inital state of the state machine for when start is called.
         /// </summary>
         /// <typeparam name="TSub">The Istate class to set as the inital state machine</typeparam>
-        public void SetInitialState<TSub>() where TSub : T, new() {
+        public void SetInitialState<TSub>() where TSub : T, new()
+        {
             var key = typeof(TSub);
-            if (!_states.ContainsKey(key))
-                throw new StateNotFoundException();
+
+            if (!IsStateFound(key))
+                StateNotFound();
 
             InitalState = key;
         }
@@ -63,28 +68,63 @@ namespace Zephyr.StateMachine.Core
         {
             if (InitalState == null)
                 throw new InitalStateNullException();
-
-            CurrentState = _states[InitalState];
-            CurrentState.OnEntry();
+            _currentStateContainer = _states[InitalState];
+            State = (T) _currentStateContainer.State;
+            State.OnEntry();
         }
 
-        public void AddTransition<TTransition, TStateFrom, TStateTo>(TTransition transition) where TTransition : ITransition, new() where TStateFrom : T, new() where TStateTo : T, new()
+        public void AddTransition<TConcreteFrom, TConcreteTo>(ITransition transition)
+            where TConcreteFrom : T, new()
+            where TConcreteTo : T, new()
+        {
+            var foundStateFromContainer = GetStateContiainer(typeof(TConcreteFrom));
+
+            var key = typeof(TConcreteTo);
+            if (!IsStateFound(key))
+                StateNotFound();
+
+            foundStateFromContainer.AddTransition(transition, key);
+        }
+
+        public void TriggerTransition<TTransition>() where TTransition : ITransition
+        {
+            var stateTo = _currentStateContainer.TriggerTransition<TTransition>();
+            SetCurrentState(stateTo);
+        }
+
+        public bool RemoveTransition<TTransition>() where TTransition : ITransition
         {
             throw new NotImplementedException();
         }
 
-
         /// <summary>
-        /// Sets the current state to the passed generic state.
+        /// Sets the current state to the passed state Type.
         /// </summary>
-        /// <typeparam name="TSub">The IState class to set as the current state</typeparam>
-        internal void SetCurrentState<TSub>() where TSub : T
+        internal void SetCurrentState(Type state)
         {
-            T foundState;
-            if (!_states.TryGetValue(typeof(TSub), out foundState))
-                throw new StateNotFoundException();
+            var foundStateContainer = GetStateContiainer(state);
 
-            CurrentState = foundState;
+            _currentStateContainer = foundStateContainer;
+            State = (T) _currentStateContainer.State;
+        }
+
+        internal StateContainer GetStateContiainer(Type state)
+        {
+            StateContainer foundState;
+            if (!_states.TryGetValue(state, out foundState))
+                StateNotFound();
+
+            return foundState;
+        }
+
+        internal bool IsStateFound(Type key)
+        {
+            return _states.ContainsKey(key);
+        }
+
+        internal void StateNotFound()
+        {
+            throw new StateNotFoundException();
         }
     }
 
@@ -113,6 +153,27 @@ namespace Zephyr.StateMachine.Core
     /// Thrown when a state of the type has already been added to the state machine
     /// </summary>
     public class DuplicateStateException : Exception
+    {
+    }
+
+    /// <summary>
+    /// Thrown when a state of the type has already been added to the state machine
+    /// </summary>
+    public class DuplicateStateTransitionException : Exception
+    {
+    }
+
+    /// <summary>
+    /// Thrown when a state of the type has already been added to the state machine
+    /// </summary>
+    public class TransitionNotFoundException : Exception
+    {
+    }
+
+    /// <summary>
+    /// Thrown when a state of the type has already been added to the state machine
+    /// </summary>
+    public class StateMachineNotStartedException : Exception
     {
     }
 }

@@ -2,11 +2,10 @@
 
 namespace Zephyr.StateMachine.Core
 {
-    public interface ITransitionContainer<TTransition, TStateTo> where TTransition : ITransition
-        where TStateTo : IState
+    public interface ITransitionContainer
     {
         Type StateTo { get; }
-        TTransition Transition { get; }
+        ITransition Transition { get; }
 
     }
 }

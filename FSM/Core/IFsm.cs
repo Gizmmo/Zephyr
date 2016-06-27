@@ -8,9 +8,9 @@ namespace Zephyr.StateMachine.Core
 
         Type InitalState { get; }
 
-        T CurrentState { get; }
+        T State { get; }
 
-        void AddState<TSub>(TSub state) where TSub : T, new();
+        void AddState(IState state);
 
         void RemoveState<TSub>() where TSub : T, new();
 
@@ -18,8 +18,12 @@ namespace Zephyr.StateMachine.Core
 
         void Start();
 
-        void AddTransition<TTransition, TStateFrom, TStateTo>(
-            TTransition transition) where TTransition : ITransition, new() where TStateFrom : T, new()
+        void AddTransition<TStateFrom, TStateTo>(ITransition transition)
+            where TStateFrom : T, new()
             where TStateTo : T, new();
+
+        void TriggerTransition<TTransition>() where TTransition : ITransition;
+
+        bool RemoveTransition<TTransition>() where TTransition : ITransition;
     }
 }

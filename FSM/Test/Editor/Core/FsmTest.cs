@@ -20,19 +20,19 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             switch (state)
             {
                 case 0:
-                    _fsm.AddState<StateOne>();
+                    _fsm.AddState(new StateOne());
                     break;
                 case 1:
-                    _fsm.AddState<StateTwo>();
+                    _fsm.AddState(new StateTwo());
                     break;
                 case 2:
-                    _fsm.AddState<StateThree>();
+                    _fsm.AddState(new StateThree());
                     break;
                 case 3:
-                    _fsm.AddState<StateFour>();
+                    _fsm.AddState(new StateFour());
                     break;
                 case 4:
-                    _fsm.AddState<StateFive>();
+                    _fsm.AddState(new StateFive());
                     break;
             }
         }
@@ -57,6 +57,11 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                     _fsm.RemoveState<StateFive>();
                     break;
             }
+        }
+
+        protected void AddSimpleState()
+        {
+            _fsm.AddState(new StateOne());
         }
 
         public abstract class AddAndRemovalTests : FsmTest
@@ -99,12 +104,12 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 public void DoesAddingAStateThatAlreadyExistsThrowADuplicateStateException()
                 {
                     //Arrange
-                    _fsm.AddState<StateOne>();
+                    AddSimpleState();
 
                     //Act
 
                     //Assert
-                    Assert.Throws<DuplicateStateException>(_fsm.AddState<StateOne>);
+                    Assert.Throws<DuplicateStateException>(AddSimpleState);
                 }
             }
 
@@ -188,7 +193,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public void IsCurrentStateNullBeforeStartIsCalled()
             {
                 //Assert
-                Assert.That(_fsm.CurrentState, Is.Null);
+                Assert.That(_fsm.State, Is.Null);
             }
 
             [Test]
@@ -208,7 +213,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 //Act
                 _fsm.SetInitialState<StateOne>();
                 _fsm.Start();
-                var currentStateType = _fsm.CurrentState.GetType();
+                var currentStateType = _fsm.State.GetType();
 
                 //Assert
                 Assert.That(currentStateType, Is.EqualTo(initialStateType));
@@ -232,7 +237,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
 
                 //Act
                 _fsm.Start();
-                var sharedMethodWasCalled = returnNumber == _fsm.CurrentState.ReturnZero();
+                var sharedMethodWasCalled = returnNumber == _fsm.State.ReturnZero();
 
                 //Assert
                 Assert.That(sharedMethodWasCalled);
@@ -246,7 +251,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
 
                 //Act
                 _fsm.Start();
-                var overiddenMethodWasCalled = returnNumber == _fsm.CurrentState.ReturnStateNumber();
+                var overiddenMethodWasCalled = returnNumber == _fsm.State.ReturnStateNumber();
 
                 //Assert
                 Assert.That(overiddenMethodWasCalled);
@@ -259,31 +264,111 @@ namespace Zephyr.StateMachine.Test.Editor.Core
 
                 //Act
                 _fsm.Start();
-                var entryWasCalled = _fsm.CurrentState.IsEntryCalled;
+                var entryWasCalled = _fsm.State.IsEntryCalled;
 
                 //Assert
                 Assert.That(entryWasCalled);
             }
         }
 
-        public class AddTransitionTests : FsmTest
+        public abstract class TransitionTests : FsmTest
         {
+            protected static bool TriggerCalled;
+
             public override void Init()
             {
                 base.Init();
-                AddStateAt(0);
-                AddStateAt(1);
-                _fsm.SetInitialState<StateOne>();
+                TriggerCalled = false;
             }
 
-            [Test]
-            public void DoesAddingATransitionBetweenTwoStatesNotReturnAnError()
+            public class AddTransitionTests : TransitionTests
             {
-                Assert.DoesNotThrow(_fsm.AddTransition<StateOneToStateTwoTransition, StateOne, StateTwo>);
+                [Test]
+                public void DoesAddingATransitionBetweenTwoStatesNotReturnAnError()
+                {
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+
+                    //Act
+
+                    //Assert
+                    Assert.DoesNotThrow(AddSimpleTransition);
+                }
+
+                private void AddSimpleTransition()
+                {
+                    _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
+                }
+
+                [Test]
+                [TestCase(0, TestName = "StateFrom exists, StateTo does not")]
+                [TestCase(1, TestName = "StateFrom does not exists, StateTo does")]
+                [TestCase(2, TestName = "StateFrom does not exists, StateTo does not exist")]
+                public void DoesAddingATransitionBetweenAStateThatExistsAndOneThatDoesNotReturnAStateNotFoundException(
+                    int state)
+                {
+                    //Arrange
+                    AddStateAt(state);
+
+                    //Act
+
+                    //Assert
+                    Assert.Throws<StateNotFoundException>(AddSimpleTransition);
+                }
+
+                [Test]
+                public void DoesAddingTheSameTransitionToTheSameStateThrowADuplicateStateTransitionException()
+                {
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+
+                    //Act
+                    AddSimpleTransition();
+
+                    //Assert
+                    Assert.Throws<DuplicateStateTransitionException>(AddSimpleTransition);
+                }
+            }
+
+            public class TriggerTransitionTests : TransitionTests
+            {
+                [Test]
+                public void DoesTriggerTransitionCallTheTriggerMethodOfThePassedTrigger()
+                {
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+
+                    _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
+                    _fsm.SetInitialState<StateOne>();
+                    _fsm.Start();
+
+                    //Act
+                    _fsm.TriggerTransition<StateOneToStateTwoTransition>();
+
+                    //Assert
+                    Assert.That(TriggerCalled, Is.True);
+                }
+
+                [Test]
+                public void DoesTriggerTransitionBeforeRunningStartReturnAStateMachineNotStartedException()
+                {
+                    
+                }
+            }
+            
+
+            public class StateOneToStateTwoTransition : ITransition
+            {
+                public void Trigger()
+                {
+                    TriggerCalled = true;
+                }
             }
         }
 
-        //TODO: Check for a state not found exception on transition!!!!!
 
         public abstract class ConcreteState : IState
         {
@@ -340,11 +425,6 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             {
                 return 5;
             }
-        }
-
-        public class StateOneToStateTwoTransition : ITransition
-        {
-            
         }
     }
 }

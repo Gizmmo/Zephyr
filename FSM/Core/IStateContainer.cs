@@ -1,14 +1,46 @@
-﻿namespace Zephyr.StateMachine.Core
+﻿using System;
+
+namespace Zephyr.StateMachine.Core
 {
-    public interface IStateContainer<T> where T : IState
+    public interface IStateContainer
     {
-        T State { get; }
+        /// <summary>
+        /// The state that this container holds.
+        /// </summary>
+        IState State { get; }
 
-        TTransition GetTransition<TTransition>() where TTransition : ITransition;
+        /// <summary>
+        /// The amount of transitions stored in transition Dictionary.
+        /// </summary>
+        int TransitionCount { get; }
 
-        void AddTransition<TTransition, TStateTo>(TTransition transition) where TTransition : ITransition
-            where TStateTo : IState;
+        /// <summary>
+        /// Gets the transition from the transition container of the transtions dictionary
+        /// </summary>
+        /// <typeparam name="T">The trpe of transition to get</typeparam>
+        /// <returns>The transition of the type store</returns>
+        ITransitionContainer GetTransition<TTransition>() where TTransition : ITransition;
 
-        void RemoveTransition<TTransition>() where TTransition : ITransition;
+        /// <summary>
+        /// Adds a transition to the transition dictionary, which will be stored in a transition container, with also the state that
+        /// it will go to upon completion.
+        /// </summary>
+        /// <param name="transition">The transition to store in the transition Dictionary</param>
+        /// <param name="stateTo">The state the fsm will change to upon completion of the transition.</param>
+        void AddTransition(ITransition transition, Type stateTo);
+
+        /// <summary>
+        /// Removes a transition for the transitions array
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns>true if the transition was removed, otherwise false.</returns>
+        bool RemoveTransition<TTransition>() where TTransition : ITransition;
+
+        /// <summary>
+        /// Triggers the Transition searched for, and then return the state the fsm should go to.
+        /// </summary>
+        /// <typeparam name="T">The transition to trigger.</typeparam>
+        /// <returns>The state the fsm should switch to in System.Type</returns>
+        Type TriggerTransition<T>() where T : ITransition;
     }
 }

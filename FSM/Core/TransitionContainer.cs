@@ -2,19 +2,16 @@
 
 namespace Zephyr.StateMachine.Core
 {
-    public class TransitionContainer<TTransition, TStateTo> :
-        ITransitionContainer<TTransition, TStateTo>
-        where TTransition : ITransition
-        where TStateTo : IState
+    public class TransitionContainer : ITransitionContainer
     {
-        public TransitionContainer(TTransition transition)
+        public TransitionContainer(ITransition transition, Type stateTo)
         {
-            StateTo = typeof(TStateTo);
+            StateTo = stateTo;
             Transition = transition;
         }
 
         public Type StateTo { get; private set; }
 
-        public TTransition Transition { get; private set; }
+        public ITransition Transition { get; private set; }
     }
 }
