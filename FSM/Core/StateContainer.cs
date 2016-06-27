@@ -5,7 +5,7 @@ namespace Zephyr.StateMachine.Core
 {
     public class StateContainer : IStateContainer
     {
-        private Dictionary<Type, ITransitionContainer> _transitions = new Dictionary<Type, ITransitionContainer>();
+        private readonly Dictionary<Type, ITransitionContainer> _transitions = new Dictionary<Type, ITransitionContainer>();
 
         /// <summary>
         /// Contructor

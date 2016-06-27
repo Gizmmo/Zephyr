@@ -5,21 +5,38 @@ namespace Zephyr.StateMachine.Core
 {
     public class Fsm<T> : IFsm<T> where T : IState
     {
+        /// <summary>
+        /// Gets the amount of states stored in the Fsm
+        /// </summary>
         public int StateCount
         {
             get { return _states.Count; }
         }
 
-        public Type InitalState { get; private set; }
-        public T State { get; private set; }
-        private StateContainer _currentStateContainer;
-
-        private Dictionary<Type, StateContainer> _states = new Dictionary<Type, StateContainer>();
+        /// <summary>
+        /// Gets the type of inital state that will be used when started
+        /// </summary>
+        public Type InitialState { get; private set; }
 
         /// <summary>
-        /// Adds a State to the State Machine 
+        /// The current state the state machine is in
         /// </summary>
-        /// <typeparam name="TSub">The IState Class to add to the state machine</typeparam>
+        public T State { get; private set; }
+
+        /// <summary>
+        /// Returns true if the Fsm has started
+        /// </summary>
+        public bool IsStarted { get; private set; }
+
+        private StateContainer _currentStateContainer;
+
+        private readonly Dictionary<Type, StateContainer> _states = new Dictionary<Type, StateContainer>();
+
+
+        /// <summary>
+        /// Adds the passed state into the state machine
+        /// </summary>
+        /// <param name="state">The state to put into the state machine</param>
         public void AddState(IState state)
         {
             var key = state.GetType();
@@ -30,27 +47,26 @@ namespace Zephyr.StateMachine.Core
             _states.Add(key, new StateContainer(state));
         }
 
+
         /// <summary>
-        /// Removes a State from the state machine.
+        /// Removes the passed state type from the state machine
         /// </summary>
-        /// <typeparam name="TSub">The IState class to remove from the state machine.</typeparam>
-        public void RemoveState<TSub>() where TSub : T, new()
+        /// <typeparam name="TSub">The state to remove from the state machine</typeparam>
+        public bool RemoveState<TSub>() where TSub : T, new()
         {
             var key = typeof(TSub);
 
             if (State != null && State.GetType() == key)
                 throw new RemoveCurrentStateException();
 
-            if (!_states.ContainsKey(key))
-                throw new StateNotFoundException();
-
-            _states.Remove(key);
+            return _states.Remove(key);
         }
 
+
         /// <summary>
-        /// Sets the inital state of the state machine for when start is called.
+        /// Sets the inital state of the state machine with the type passed
         /// </summary>
-        /// <typeparam name="TSub">The Istate class to set as the inital state machine</typeparam>
+        /// <typeparam name="TSub">The type to set the FSM when the machine starts</typeparam>
         public void SetInitialState<TSub>() where TSub : T, new()
         {
             var key = typeof(TSub);
@@ -58,21 +74,28 @@ namespace Zephyr.StateMachine.Core
             if (!IsStateFound(key))
                 StateNotFound();
 
-            InitalState = key;
+            InitialState = key;
         }
 
+
         /// <summary>
-        /// Starts the state machine on the inital state.
+        /// Starts the FSM
         /// </summary>
         public void Start()
         {
-            if (InitalState == null)
+            if (InitialState == null)
                 throw new InitalStateNullException();
-            _currentStateContainer = _states[InitalState];
-            State = (T) _currentStateContainer.State;
-            State.OnEntry();
+
+            SetCurrentState(InitialState);
+            IsStarted = true;
         }
 
+        /// <summary>
+        /// Adds a transition between 2 states
+        /// </summary>
+        /// <typeparam name="TStateFrom">The state that this transiton can be triggered from</typeparam>
+        /// <typeparam name="TStateTo">the state the fsm will go to when the transition completes its trigger</typeparam>
+        /// <param name="transition">The transition to trigger to go between these states</param>
         public void AddTransition<TConcreteFrom, TConcreteTo>(ITransition transition)
             where TConcreteFrom : T, new()
             where TConcreteTo : T, new()
@@ -86,15 +109,30 @@ namespace Zephyr.StateMachine.Core
             foundStateFromContainer.AddTransition(transition, key);
         }
 
+        /// <summary>
+        /// Triggers the passed transition for the Fsm's current state
+        /// </summary>
+        /// <typeparam name="TTransition">The transition to trigger</typeparam>
         public void TriggerTransition<TTransition>() where TTransition : ITransition
         {
+            if (!IsStarted)
+                throw new StateMachineNotStartedException();
+
             var stateTo = _currentStateContainer.TriggerTransition<TTransition>();
             SetCurrentState(stateTo);
         }
 
-        public bool RemoveTransition<TTransition>() where TTransition : ITransition
+        /// <summary>
+        /// Removes the passed transition from the passed state, and returns true if it was done successfully.
+        /// </summary>
+        /// <typeparam name="TTransition">The transition to remove</typeparam>
+        /// <typeparam name="TState">The state to remove the transition from</typeparam>
+        /// <returns>True if the transition was removed, false otherwise</returns>
+        public bool RemoveTransition<TTransition, TState>()
+            where TTransition : ITransition
+            where TState : T
         {
-            throw new NotImplementedException();
+            return GetStateContiainer(typeof(TState)).RemoveTransition<TTransition>();
         }
 
         /// <summary>
@@ -104,24 +142,42 @@ namespace Zephyr.StateMachine.Core
         {
             var foundStateContainer = GetStateContiainer(state);
 
+            if (IsStarted)
+                State.OnExit();
+
             _currentStateContainer = foundStateContainer;
             State = (T) _currentStateContainer.State;
+            State.OnEntry();
         }
 
+        /// <summary>
+        /// Returns the State Container for the passed state type
+        /// </summary>
+        /// <param name="state">The state type to find the container of</param>
+        /// <returns>The state container of the passed state</returns>
         internal StateContainer GetStateContiainer(Type state)
         {
             StateContainer foundState;
+
             if (!_states.TryGetValue(state, out foundState))
                 StateNotFound();
 
             return foundState;
         }
 
+        /// <summary>
+        /// Returns true if the state is in the Fsm, false otherwise
+        /// </summary>
+        /// <param name="key">The state name</param>
+        /// <returns>true if the state is in the Fsm, false otherwise</returns>
         internal bool IsStateFound(Type key)
         {
             return _states.ContainsKey(key);
         }
 
+        /// <summary>
+        /// Throws a StateNotFoundException
+        /// </summary>
         internal void StateNotFound()
         {
             throw new StateNotFoundException();

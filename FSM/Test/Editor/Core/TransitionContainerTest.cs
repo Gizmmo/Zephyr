@@ -57,11 +57,19 @@ namespace Zephyr.StateMachine.Test.Editor.Core
         public void OnEntry()
         {
         }
+
+        public void OnExit()
+        {
+        }
     }
 
     public class StateTwo : IState
     {
         public void OnEntry()
+        {
+        }
+
+        public void OnExit()
         {
         }
     }

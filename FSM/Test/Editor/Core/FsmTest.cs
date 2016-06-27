@@ -137,9 +137,25 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             }
 
             [Test]
-            public void DoesRemovingAStateThatIsNotInTheFsmThrowAStateNotFoundException()
+            public void DoesRemovingAStateThatIsInTheFsmReturnTrue()
             {
-                Assert.Throws<StateNotFoundException>(_fsm.RemoveState<StateFive>);
+                //Arrange
+                _fsm.AddState(new StateOne());
+                //Act
+                var stateWasRemoved = _fsm.RemoveState<StateOne>();
+                //Assert
+                Assert.That(stateWasRemoved, Is.True);
+            }
+
+            [Test]
+            public void DoesRemovingAStateThatIsNotInTheFsmReturnFalse()
+            {
+                //Arrange
+
+                //Act
+                var stateWasRemoved = _fsm.RemoveState<StateOne>();
+                //Assert
+                Assert.That(stateWasRemoved, Is.False);
             }
 
             [Test]
@@ -153,7 +169,12 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 _fsm.Start();
 
                 //Assert
-                Assert.Throws<RemoveCurrentStateException>(_fsm.RemoveState<StateOne>);
+                Assert.Throws<RemoveCurrentStateException>(RemoveState);
+            }
+
+            private void RemoveState()
+            {
+                _fsm.RemoveState<StateOne>();
             }
         }
 
@@ -170,7 +191,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 _fsm.SetInitialState<StateOne>();
 
                 //Assert
-                Assert.That(_fsm.InitalState, Is.EqualTo(initalStateType));
+                Assert.That(_fsm.InitialState, Is.EqualTo(initalStateType));
             }
 
             [Test]
@@ -187,6 +208,19 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             {
                 base.Init();
                 AddStateAt(0);
+            }
+
+            [Test]
+            public void DoesIsStartedTurnToTrueWhenTheFsmIsStarted()
+            {
+                //Arrange
+                _fsm.SetInitialState<StateOne>();
+
+                //Act
+                _fsm.Start();
+
+                //Assert
+                Assert.That(_fsm.IsStarted, Is.True);
             }
 
             [Test]
@@ -355,10 +389,185 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 [Test]
                 public void DoesTriggerTransitionBeforeRunningStartReturnAStateMachineNotStartedException()
                 {
-                    
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+
+                    _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
+                    _fsm.SetInitialState<StateOne>();
+
+                    //Act
+
+                    //Assert
+                    Assert.Throws<StateMachineNotStartedException>(_fsm.TriggerTransition<StateOneToStateTwoTransition>);
+                }
+
+                [Test]
+                public void DoesTriggeringATransitionCauseTheNextStatesOnEntryToBeCalled()
+                {
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+
+                    _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
+                    _fsm.SetInitialState<StateOne>();
+                    _fsm.Start();
+
+                    //Act
+                    _fsm.TriggerTransition<StateOneToStateTwoTransition>();
+                    var entryInSecondState = ((StateTwo) _fsm.State).IsUniqueEntryCalled;
+
+                    //Assert
+                    Assert.That(entryInSecondState, Is.True);
+                }
+
+                [Test]
+                public void DoesTriggerTransitionOnlyCallTheOnEntryOnceForTheStateBeingMovedTo()
+                {
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+
+                    _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
+                    _fsm.SetInitialState<StateOne>();
+                    _fsm.Start();
+
+                    //Act
+                    _fsm.TriggerTransition<StateOneToStateTwoTransition>();
+
+                    //Assert
+                    Assert.That(_fsm.State.AmountOfEntryCalls, Is.EqualTo(1));
+                }
+
+                [Test]
+                public void DoesTriggerTransitionOnlyCallTheOnEntryOnceForTheStateBeingMovedFrom()
+                {
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+
+                    _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
+                    _fsm.SetInitialState<StateOne>();
+                    _fsm.Start();
+                    var firstState = _fsm.State;
+
+                    //Act
+                    _fsm.TriggerTransition<StateOneToStateTwoTransition>();
+
+                    //Assert
+                    Assert.That(firstState.AmountOfEntryCalls, Is.EqualTo(1));
+                }
+
+                [Test]
+                public void DoesTriggerTransitionCallTheOnExitMethodOfTheStateFromStateWhenLeaving()
+                {
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+
+                    _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
+                    _fsm.SetInitialState<StateOne>();
+                    _fsm.Start();
+                    var firstState = _fsm.State;
+
+                    //Act
+                    _fsm.TriggerTransition<StateOneToStateTwoTransition>();
+
+                    //Assert
+                    Assert.That(firstState.IsExitCalled, Is.True);
+                }
+
+                [Test]
+                public void DoesTriggerTransitionOnCallTheOnExitOnceForTheStateBeingLeft()
+                {
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+
+                    _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
+                    _fsm.SetInitialState<StateOne>();
+                    _fsm.Start();
+                    var firstState = _fsm.State;
+
+                    //Act
+                    _fsm.TriggerTransition<StateOneToStateTwoTransition>();
+
+                    //Assert
+                    Assert.That(firstState.AmountOfExitCalls, Is.EqualTo(1));
+                }
+
+                [Test]
+                public void DoesTriggerTransitionTheOnExitTriggerBeforeTheOnEntryOfTheNextState()
+                {
+                    //Arrange
+                    var testObject = new EntryExitTestObject();
+                    _fsm.AddState(new StateOne(testObject));
+                    _fsm.AddState(new StateTwo(testObject));
+
+                    _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
+                    _fsm.SetInitialState<StateOne>();
+                    _fsm.Start();
+                    var firstState = _fsm.State;
+
+                    //Act
+                    _fsm.TriggerTransition<StateOneToStateTwoTransition>();
+
+                    //Assert
+                    Assert.That(testObject.ExitCalledBeforeSecondEntry, Is.True);
                 }
             }
-            
+
+            public class RemoveTransitionTests : TransitionTests
+            {
+                [Test]
+                public void DoesRemovingATransitionReturnTrueIfRemovedSuccessfully()
+                {
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+
+                    _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
+
+                    //Act
+                    var returnValueOfRemove = _fsm.RemoveTransition<StateOneToStateTwoTransition, StateOne>();
+
+                    //Assert
+                    Assert.That(returnValueOfRemove, Is.True);
+                }
+
+                [Test]
+                public void DoesRemovingATransitionReturnFalseIfNotRemovedSuccessfully()
+                {
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+
+                    //Act
+                    var returnValueOfRemove = _fsm.RemoveTransition<StateOneToStateTwoTransition, StateOne>();
+
+                    //Assert
+                    Assert.That(returnValueOfRemove, Is.False);
+                }
+
+                [Test]
+                public void DoesRemovingATransitionThenTriggeringItThrowATransitionNotFoundException()
+                {
+                    //Arrange
+                    AddStateAt(0);
+                    AddStateAt(1);
+                    _fsm.SetInitialState<StateOne>();
+                    _fsm.Start();
+                    _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
+
+                    //Act
+                    _fsm.RemoveTransition<StateOneToStateTwoTransition, StateOne>();
+
+
+                    //Assert
+                    Assert.Throws<TransitionNotFoundException>(_fsm.TriggerTransition<StateOneToStateTwoTransition>);
+                }
+            }
+
 
             public class StateOneToStateTwoTransition : ITransition
             {
@@ -373,6 +582,20 @@ namespace Zephyr.StateMachine.Test.Editor.Core
         public abstract class ConcreteState : IState
         {
             public bool IsEntryCalled { get; private set; }
+            public bool IsExitCalled { get; private set; }
+            public int AmountOfEntryCalls { get; private set; }
+            public int AmountOfExitCalls { get; private set; }
+
+            private readonly EntryExitTestObject _testObject;
+
+            protected ConcreteState()
+            {
+            }
+
+            protected ConcreteState(EntryExitTestObject testObject)
+            {
+                _testObject = testObject;
+            }
 
             public int ReturnZero()
             {
@@ -383,7 +606,18 @@ namespace Zephyr.StateMachine.Test.Editor.Core
 
             public virtual void OnEntry()
             {
+                AmountOfEntryCalls++;
                 IsEntryCalled = true;
+                if (_testObject != null)
+                    _testObject.OnEntry();
+            }
+
+            public virtual void OnExit()
+            {
+                AmountOfExitCalls++;
+                IsExitCalled = true;
+                if (_testObject != null)
+                    _testObject.OnExit();
             }
         }
 
@@ -393,13 +627,37 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             {
                 return 1;
             }
+
+            public StateOne()
+            {
+            }
+
+            public StateOne(EntryExitTestObject testObject) : base(testObject)
+            {
+            }
         }
 
         public class StateTwo : ConcreteState
         {
+            public bool IsUniqueEntryCalled { get; private set; }
+
             public override int ReturnStateNumber()
             {
                 return 2;
+            }
+
+            public override void OnEntry()
+            {
+                base.OnEntry();
+                IsUniqueEntryCalled = true;
+            }
+
+            public StateTwo(EntryExitTestObject testObject) : base(testObject)
+            {
+            }
+
+            public StateTwo()
+            {
             }
         }
 
@@ -409,6 +667,14 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             {
                 return 3;
             }
+
+            public StateThree(EntryExitTestObject testObject) : base(testObject)
+            {
+            }
+
+            public StateThree()
+            {
+            }
         }
 
         public class StateFour : ConcreteState
@@ -417,6 +683,14 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             {
                 return 4;
             }
+
+            public StateFour(EntryExitTestObject testObject) : base(testObject)
+            {
+            }
+
+            public StateFour()
+            {
+            }
         }
 
         public class StateFive : ConcreteState
@@ -424,6 +698,34 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public override int ReturnStateNumber()
             {
                 return 5;
+            }
+
+            public StateFive(EntryExitTestObject testObject) : base(testObject)
+            {
+            }
+
+            public StateFive()
+            {
+            }
+        }
+
+        public class EntryExitTestObject
+        {
+            private int _amountOfEntries;
+
+            public bool ExitCalledBeforeSecondEntry { get; private set; }
+
+            public void OnEntry()
+            {
+                _amountOfEntries++;
+            }
+
+            public void OnExit()
+            {
+                if (_amountOfEntries < 2)
+                {
+                    ExitCalledBeforeSecondEntry = true;
+                }
             }
         }
     }

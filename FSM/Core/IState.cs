@@ -3,5 +3,7 @@
     public interface IState
     {
         void OnEntry();
+
+        void OnExit();
     }
 }
