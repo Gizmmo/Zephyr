@@ -15,6 +15,10 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             _fsm = new Fsm<ConcreteState>();
         }
 
+        /// <summary>
+        /// Adds the state to the state machine based on the number passed
+        /// </summary>
+        /// <param name="state">Will add the State+1 to the state machine</param>
         protected void AddStateAt(int state)
         {
             switch (state)
@@ -37,6 +41,10 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             }
         }
 
+        /// <summary>
+        /// removes the state from the state machine based on the number passed
+        /// </summary>
+        /// <param name="state">Will remove the State+1 from the state machine</param>
         protected void RemoveStateAt(int state)
         {
             switch (state)
@@ -59,6 +67,9 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             }
         }
 
+        /// <summary>
+        /// Adds StateOne to the state machine
+        /// </summary>
         protected void AddSimpleState()
         {
             _fsm.AddState(new StateOne());
