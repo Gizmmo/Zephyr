@@ -43,7 +43,8 @@ namespace Zephyr.StateMachine.Core
 
             if (_states.ContainsKey(key))
                 throw new DuplicateStateException();
-
+            
+            state.SetUpTransition(TriggerTransition<ITransition>);
             _states.Add(key, new StateContainer(state));
         }
 

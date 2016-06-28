@@ -195,7 +195,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public void DoesInitalStateSetTheInitialState()
             {
                 //Arrange
-                var initalStateType = typeof(StateOne);
+                var initalStateType = typeof (StateOne);
                 AddStateAt(0);
 
                 //Act
@@ -252,7 +252,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public void DoesCallingStartWithAnIntialStateMakeThatStateTheCurrentState()
             {
                 //Arrange
-                var initialStateType = typeof(StateOne);
+                var initialStateType = typeof (StateOne);
 
 
                 //Act
@@ -518,7 +518,6 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                     _fsm.AddTransition<StateOne, StateTwo>(new StateOneToStateTwoTransition());
                     _fsm.SetInitialState<StateOne>();
                     _fsm.Start();
-                    var firstState = _fsm.State;
 
                     //Act
                     _fsm.TriggerTransition<StateOneToStateTwoTransition>();
@@ -734,9 +733,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public void OnExit()
             {
                 if (_amountOfEntries < 2)
-                {
                     ExitCalledBeforeSecondEntry = true;
-                }
             }
         }
     }

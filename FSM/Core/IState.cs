@@ -1,4 +1,6 @@
-﻿namespace Zephyr.StateMachine.Core
+﻿using System;
+
+namespace Zephyr.StateMachine.Core
 {
     public interface IState
     {
@@ -11,5 +13,9 @@
         /// Called on Exit from the state 
         /// </summary>
         void OnExit();
+
+        void AddFsm(IFsm<IState> stateMachine);
+
+        void SetUpTransition(Action transitionMethod);
     }
 }
