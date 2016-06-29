@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using Zephyr.StateMachine.Core;
 
 namespace Zephyr.StateMachine.Test.Editor.Core
@@ -21,13 +22,13 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             switch (transitionNum)
             {
                 case 0:
-                    _container.AddTransition(new TransitionOne(), typeof(StateTwo));
+                    _container.AddTransition(new TransitionOne(), typeof (StateTwo));
                     break;
                 case 1:
-                    _container.AddTransition(new TransitionTwo(), typeof(StateTwo));
+                    _container.AddTransition(new TransitionTwo(), typeof (StateTwo));
                     break;
                 case 2:
-                    _container.AddTransition(new TransitionThree(), typeof(StateTwo));
+                    _container.AddTransition(new TransitionThree(), typeof (StateTwo));
                     break;
             }
         }
@@ -54,7 +55,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public void DoesInitalizingAStateContainerWithAStateMakeTheStatePropertyThatState()
             {
                 //Arrange
-                var stateType = typeof(TestState);
+                var stateType = typeof (TestState);
                 //Act
                 _container = new StateContainer(new TestState());
                 var containerStateType = _container.State.GetType();
@@ -105,7 +106,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             {
                 //Arrange
                 var originalTransition = new TransitionOne();
-                _container.AddTransition(originalTransition, typeof(StateTwo));
+                _container.AddTransition(originalTransition, typeof (StateTwo));
 
                 //Act
                 var returnedTransition = _container.GetTransition<TransitionOne>().Transition;
@@ -118,7 +119,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public void DoesGetTransitionReturnTheExpectedStateToInTheContainer()
             {
                 //Arrange
-                var originalStateTo = typeof(StateTwo);
+                var originalStateTo = typeof (StateTwo);
                 _container.AddTransition(new TransitionOne(), originalStateTo);
 
                 //Act
@@ -189,7 +190,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public void DoesCallingTriggerOnATransitionReturnTheStateTo()
             {
                 //Arrange
-                var stateThatIsSet = typeof(StateTwo);
+                var stateThatIsSet = typeof (StateTwo);
                 _container.AddTransition(new TransitionOne(), stateThatIsSet);
 
                 //Act
@@ -203,7 +204,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             public void DoesCallingTriggerOnATransitionCallTheTriggerMethod()
             {
                 //Arrange
-                _container.AddTransition(new TransitionOne(), typeof(StateTwo));
+                _container.AddTransition(new TransitionOne(), typeof (StateTwo));
 
                 //Act
                 _container.TriggerTransition<TransitionOne>();
@@ -217,7 +218,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
             /// </summary>
             private void AddSimpleTransition()
             {
-                _container.AddTransition(new TransitionOne(), typeof(StateTwo));
+                _container.AddTransition(new TransitionOne(), typeof (StateTwo));
             }
         }
 
@@ -234,7 +235,10 @@ namespace Zephyr.StateMachine.Test.Editor.Core
 
             public void OnExit()
             {
-                
+            }
+
+            public void SetUpTransition(Action<Type> transitionMethod)
+            {
             }
         }
 

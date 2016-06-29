@@ -25,10 +25,7 @@ namespace Zephyr.StateMachine.Core
         /// <summary>
         /// The amount of transitions stored in transition Dictionary.
         /// </summary>
-        public int TransitionCount
-        {
-            get { return _transitions.Count; }
-        }
+        public int TransitionCount { get { return _transitions.Count; } }
 
         /// <summary>
         /// Adds a transition to the transition dictionary, which will be stored in a transition container, with also the state that
@@ -53,10 +50,15 @@ namespace Zephyr.StateMachine.Core
         /// <returns>The transition of the type store</returns>
         public ITransitionContainer GetTransition<T>() where T : ITransition
         {
-            var key = typeof(T);
+            var key = typeof (T);
+            return GetTransition(key);
+        }
+
+        public ITransitionContainer GetTransition(Type transition)
+        {
             ITransitionContainer foundTransition;
 
-            if (!_transitions.TryGetValue(key, out foundTransition))
+            if (!_transitions.TryGetValue(transition, out foundTransition))
                 throw new TransitionNotFoundException();
 
             return foundTransition;
@@ -69,7 +71,7 @@ namespace Zephyr.StateMachine.Core
         /// <returns>true if the transition was removed, otherwise false.</returns>
         public bool RemoveTransition<T>() where T : ITransition
         {
-            return _transitions.Remove(typeof(T));
+            return _transitions.Remove(typeof (T));
         }
 
         /// <summary>
@@ -79,7 +81,12 @@ namespace Zephyr.StateMachine.Core
         /// <returns>The state the fsm should switch to in System.Type</returns>
         public Type TriggerTransition<T>() where T : ITransition
         {
-            var container = GetTransition<T>();
+            return TriggerTransition(typeof(T));
+        }
+
+
+        public Type TriggerTransition(Type transition) {
+            var container = GetTransition(transition);
             container.Transition.Trigger();
             return container.StateTo;
         }

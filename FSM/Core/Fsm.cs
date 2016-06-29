@@ -8,10 +8,7 @@ namespace Zephyr.StateMachine.Core
         /// <summary>
         /// Gets the amount of states stored in the Fsm
         /// </summary>
-        public int StateCount
-        {
-            get { return _states.Count; }
-        }
+        public int StateCount { get { return _states.Count; } }
 
         /// <summary>
         /// Gets the type of inital state that will be used when started
@@ -43,8 +40,8 @@ namespace Zephyr.StateMachine.Core
 
             if (_states.ContainsKey(key))
                 throw new DuplicateStateException();
-            
-            state.SetUpTransition(TriggerTransition<ITransition>);
+
+            state.SetUpTransition(TriggerTransition);
             _states.Add(key, new StateContainer(state));
         }
 
@@ -55,7 +52,7 @@ namespace Zephyr.StateMachine.Core
         /// <typeparam name="TSub">The state to remove from the state machine</typeparam>
         public bool RemoveState<TSub>() where TSub : T, new()
         {
-            var key = typeof(TSub);
+            var key = typeof (TSub);
 
             if (State != null && State.GetType() == key)
                 throw new RemoveCurrentStateException();
@@ -70,7 +67,7 @@ namespace Zephyr.StateMachine.Core
         /// <typeparam name="TSub">The type to set the FSM when the machine starts</typeparam>
         public void SetInitialState<TSub>() where TSub : T, new()
         {
-            var key = typeof(TSub);
+            var key = typeof (TSub);
 
             if (!IsStateFound(key))
                 StateNotFound();
@@ -101,9 +98,9 @@ namespace Zephyr.StateMachine.Core
             where TConcreteFrom : T, new()
             where TConcreteTo : T, new()
         {
-            var foundStateFromContainer = GetStateContiainer(typeof(TConcreteFrom));
+            var foundStateFromContainer = GetStateContiainer(typeof (TConcreteFrom));
 
-            var key = typeof(TConcreteTo);
+            var key = typeof (TConcreteTo);
             if (!IsStateFound(key))
                 StateNotFound();
 
@@ -124,6 +121,19 @@ namespace Zephyr.StateMachine.Core
         }
 
         /// <summary>
+        /// Triggers the passed transition for the Fsm's current state
+        /// </summary>
+        /// <typeparam name="TTransition">The transition to trigger</typeparam>
+        public void TriggerTransition(Type transition)
+        {
+            if (!IsStarted)
+                throw new StateMachineNotStartedException();
+
+            var stateTo = _currentStateContainer.TriggerTransition(transition);
+            SetCurrentState(stateTo);
+        }
+
+        /// <summary>
         /// Removes the passed transition from the passed state, and returns true if it was done successfully.
         /// </summary>
         /// <typeparam name="TTransition">The transition to remove</typeparam>
@@ -133,7 +143,7 @@ namespace Zephyr.StateMachine.Core
             where TTransition : ITransition
             where TState : T
         {
-            return GetStateContiainer(typeof(TState)).RemoveTransition<TTransition>();
+            return GetStateContiainer(typeof (TState)).RemoveTransition<TTransition>();
         }
 
         /// <summary>

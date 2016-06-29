@@ -5,7 +5,7 @@ namespace Zephyr.StateMachine.Core
 {
     public abstract class FsmState : IState
     {
-        private Action transitionAction;
+        private Action<Type> _transitionAction;
 
         public virtual void OnEntry()
         {
@@ -15,15 +15,15 @@ namespace Zephyr.StateMachine.Core
         {
         }
 
-        public void SetUpTransition(Action transitionMethod)
+        public void SetUpTransition(Action<Type> transitionMethod)
         {
-            transitionAction = transitionMethod;
+            _transitionAction = transitionMethod;
         }
 
 
         protected void TriggerTransition<T>() where T : ITransition, new()
         {
-            transitionAction<T>();
+            _transitionAction(typeof(T));
         }
     }
 }

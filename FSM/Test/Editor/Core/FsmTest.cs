@@ -1,4 +1,5 @@
-﻿using Zephyr.StateMachine.Core;
+﻿using System;
+using Zephyr.StateMachine.Core;
 using NUnit.Framework;
 
 namespace Zephyr.StateMachine.Test.Editor.Core
@@ -628,6 +629,10 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 IsExitCalled = true;
                 if (_testObject != null)
                     _testObject.OnExit();
+            }
+
+            public void SetUpTransition(Action<Type> transitionMethod)
+            {
             }
         }
 

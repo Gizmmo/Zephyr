@@ -1,4 +1,5 @@
-﻿using Zephyr.StateMachine.Core;
+﻿using System;
+using Zephyr.StateMachine.Core;
 
 namespace Zephyr.StateMachine.Example
 {
@@ -10,8 +11,6 @@ namespace Zephyr.StateMachine.Example
         {
             _stateMachine = new Fsm<ConcreteClass>();
         }
-
-
 
 
         public abstract class ConcreteClass : IState
@@ -31,13 +30,16 @@ namespace Zephyr.StateMachine.Example
             {
             }
 
+            public void SetUpTransition(Action<Type> transitionMethod)
+            {
+            }
+
             public virtual void DoAction()
             {
             }
 
             public virtual void ReadyAction()
             {
-                
             }
         }
 
@@ -47,11 +49,6 @@ namespace Zephyr.StateMachine.Example
             {
             }
 
-            public override void ReadyAction()
-            {
-                base.ReadyAction();
-                
-            }
         }
 
         public class ActionState : ConcreteClass

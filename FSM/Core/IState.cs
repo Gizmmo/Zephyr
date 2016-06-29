@@ -14,8 +14,6 @@ namespace Zephyr.StateMachine.Core
         /// </summary>
         void OnExit();
 
-        void AddFsm(IFsm<IState> stateMachine);
-
-        void SetUpTransition(Action transitionMethod);
+        void SetUpTransition(Action<Type> transitionMethod);
     }
 }

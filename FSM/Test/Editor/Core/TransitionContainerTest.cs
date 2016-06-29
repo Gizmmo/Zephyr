@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using Zephyr.StateMachine.Core;
 
 namespace Zephyr.StateMachine.Test.Editor.Core
@@ -12,7 +13,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
         [SetUp]
         public void Init()
         {
-            _container = new TransitionContainer(new TransitionOne(), typeof(StateTwo));
+            _container = new TransitionContainer(new TransitionOne(), typeof (StateTwo));
         }
 
         [Test]
@@ -31,7 +32,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
         {
             //Arrange
             var containerTransitionType = _container.Transition.GetType();
-            var transitionPassedType = typeof(TransitionOne);
+            var transitionPassedType = typeof (TransitionOne);
 
             //Act
 
@@ -43,7 +44,7 @@ namespace Zephyr.StateMachine.Test.Editor.Core
         public void DoesInitalizingTheTransitionContiainerSetTheStateToPropertyToTheCorrectType()
         {
             //Arrange
-            var stateToPassedType = typeof(StateTwo);
+            var stateToPassedType = typeof (StateTwo);
 
             //Act
 
@@ -61,6 +62,10 @@ namespace Zephyr.StateMachine.Test.Editor.Core
         public void OnExit()
         {
         }
+
+        public void SetUpTransition(Action<Type> transitionMethod)
+        {
+        }
     }
 
     public class StateTwo : IState
@@ -70,6 +75,10 @@ namespace Zephyr.StateMachine.Test.Editor.Core
         }
 
         public void OnExit()
+        {
+        }
+
+        public void SetUpTransition(Action<Type> transitionMethod)
         {
         }
     }

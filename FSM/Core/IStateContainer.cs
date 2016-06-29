@@ -21,6 +21,9 @@ namespace Zephyr.StateMachine.Core
         /// <returns>The transition of the type store</returns>
         ITransitionContainer GetTransition<TTransition>() where TTransition : ITransition;
 
+        ITransitionContainer GetTransition(Type transition);
+
+
         /// <summary>
         /// Adds a transition to the transition dictionary, which will be stored in a transition container, with also the state that
         /// it will go to upon completion.
@@ -42,5 +45,7 @@ namespace Zephyr.StateMachine.Core
         /// <typeparam name="T">The transition to trigger.</typeparam>
         /// <returns>The state the fsm should switch to in System.Type</returns>
         Type TriggerTransition<T>() where T : ITransition;
+
+        Type TriggerTransition(Type transition);
     }
 }
