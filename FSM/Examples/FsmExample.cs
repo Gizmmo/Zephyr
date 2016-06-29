@@ -1,5 +1,4 @@
-﻿using System;
-using Zephyr.StateMachine.Core;
+﻿using Zephyr.StateMachine.Core;
 
 namespace Zephyr.StateMachine.Example
 {
@@ -9,29 +8,26 @@ namespace Zephyr.StateMachine.Example
 
         public FsmExample()
         {
+            //Create the FSM and some Data class to be refrenced in states
             _stateMachine = new Fsm<ConcreteClass>();
+            var data = new StateData();
+
+            //Add States
+            _stateMachine.AddState(new IdleState(data));
+            _stateMachine.AddState(new ActionState(data));
+
+            //AddTransitions
+            _stateMachine.AddTransition<IdleState, ActionState>(new ReadyToAction());
         }
 
 
-        public abstract class ConcreteClass : IState
+        public abstract class ConcreteClass : FsmState
         {
             protected StateData Data;
 
             protected ConcreteClass(StateData data)
             {
                 Data = data;
-            }
-
-            public virtual void OnEntry()
-            {
-            }
-
-            public virtual void OnExit()
-            {
-            }
-
-            public void SetUpTransition(Action<Type> transitionMethod)
-            {
             }
 
             public virtual void DoAction()
@@ -48,7 +44,6 @@ namespace Zephyr.StateMachine.Example
             public IdleState(StateData data) : base(data)
             {
             }
-
         }
 
         public class ActionState : ConcreteClass
@@ -64,11 +59,12 @@ namespace Zephyr.StateMachine.Example
             }
         }
 
-        public class SimpleTransition : ITransition
+        public class ReadyToAction : FsmTransition
         {
-            public void Trigger()
-            {
-            }
+        }
+
+        public class Stop : FsmTransition
+        {
         }
 
         public class StateData

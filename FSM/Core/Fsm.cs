@@ -40,8 +40,7 @@ namespace Zephyr.StateMachine.Core
 
             if (_states.ContainsKey(key))
                 throw new DuplicateStateException();
-
-            //TODO: This may be able to be set up with connecting straight to the states TRiggerTransition rather then the FSM version
+            
             state.SetUpTransition(TriggerTransition);
             _states.Add(key, new StateContainer(state));
         }
@@ -121,10 +120,7 @@ namespace Zephyr.StateMachine.Core
             SetCurrentState(stateTo);
         }
 
-        /// <summary>
-        /// Triggers the passed transition for the Fsm's current state
-        /// </summary>
-        /// <typeparam name="TTransition">The transition to trigger</typeparam>
+
         public void TriggerTransition(Type transition)
         {
             if (!IsStarted)
@@ -243,5 +239,8 @@ namespace Zephyr.StateMachine.Core
     /// </summary>
     public class StateMachineNotStartedException : Exception
     {
+    }
+
+    public class InvalidTransitionTypeException : Exception {
     }
 }

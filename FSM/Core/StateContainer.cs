@@ -50,12 +50,17 @@ namespace Zephyr.StateMachine.Core
         /// <returns>The transition of the type store</returns>
         public ITransitionContainer GetTransition<T>() where T : ITransition
         {
-            var key = typeof (T);
-            return GetTransition(key);
+            return GetTransition(typeof (T));
         }
 
+        /// <summary>
+        /// Gets the transition from the transition container of the transtions dictionary
+        /// </summary>
+        /// <param name="transition">The trpe of transition to get</param>
+        /// <returns>The transition of the type store</returns>
         public ITransitionContainer GetTransition(Type transition)
         {
+            CheckIsTransitionType(transition);
             ITransitionContainer foundTransition;
 
             if (!_transitions.TryGetValue(transition, out foundTransition))
@@ -81,14 +86,32 @@ namespace Zephyr.StateMachine.Core
         /// <returns>The state the fsm should switch to in System.Type</returns>
         public Type TriggerTransition<T>() where T : ITransition
         {
-            return TriggerTransition(typeof(T));
+            return TriggerTransition(typeof (T));
         }
 
 
-        public Type TriggerTransition(Type transition) {
+        /// <summary>
+        /// Triggers the Transition searched for, and then return the state the fsm should go to.
+        /// </summary>
+        /// <param name="transition">The transition to trigger</param>
+        /// <returns>The state the fsm should switch to in System.Type</returns>
+        public Type TriggerTransition(Type transition)
+        {
+            CheckIsTransitionType(transition);
             var container = GetTransition(transition);
             container.Transition.Trigger();
             return container.StateTo;
+        }
+
+        /// <summary>
+        /// Checks to see if the passed type is a subclass of teh ITransition class.  If not, it throws a InvalidTransitionTypeException.
+        /// </summary>
+        /// <param name="transition">The transition Type to check is a subclass of ITransition</param>
+        private void CheckIsTransitionType(Type transition)
+        {
+            //If the passed type is not a subclass of ITransition, throw a InvalidTransitionTypeException
+            if (!typeof (ITransition).IsAssignableFrom(transition))
+                throw new InvalidTransitionTypeException();
         }
     }
 }

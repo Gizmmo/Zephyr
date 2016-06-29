@@ -213,6 +213,40 @@ namespace Zephyr.StateMachine.Test.Editor.Core
                 Assert.That(_wasTriggered, Is.True);
             }
 
+            [Test]
+            public void DoesTriggerTransitionWithANonExistantTransitionThrowATransitionNotFoundException()
+            {
+                //Assert
+                Assert.Throws<TransitionNotFoundException>(TriggerSimpleTransition);
+            }
+
+            [Test]
+            public void DoesGetTransitionThrowAInvalidTransitionTypeExceptionWhenPassedAnIncorrectType()
+            {
+                Assert.Throws<InvalidTransitionTypeException>(GetNonTransitionClass);
+            }
+
+            [Test]
+            public void DoesTiggerTransitionThrowAInvalidTransitionTypeExceptionWhenPassedAnIncorrectType()
+            {
+                Assert.Throws<InvalidTransitionTypeException>(TriggerNonTransitionClass);
+            }
+
+            private void TriggerSimpleTransition()
+            {
+                _container.TriggerTransition(typeof (TransitionOne));
+            }
+
+            private void GetNonTransitionClass()
+            {
+                _container.GetTransition(typeof (TestState));
+            }
+
+            private void TriggerNonTransitionClass()
+            {
+                _container.TriggerTransition(typeof (TestState));
+            }
+
             /// <summary>
             /// Used to add a simple transition to the container using TransitionOne and StateTwo
             /// </summary>

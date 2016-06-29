@@ -1,10 +1,10 @@
 ﻿using System;
-using Zephyr.StateMachine.Core;
 
 namespace Zephyr.StateMachine.Core
 {
     public abstract class FsmState : IState
     {
+
         private Action<Type> _transitionAction;
 
         public virtual void OnEntry()
