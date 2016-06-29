@@ -41,6 +41,7 @@ namespace Zephyr.StateMachine.Core
             if (_states.ContainsKey(key))
                 throw new DuplicateStateException();
 
+            //TODO: This may be able to be set up with connecting straight to the states TRiggerTransition rather then the FSM version
             state.SetUpTransition(TriggerTransition);
             _states.Add(key, new StateContainer(state));
         }
