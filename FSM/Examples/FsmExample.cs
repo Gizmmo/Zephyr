@@ -18,6 +18,11 @@ namespace Zephyr.StateMachine.Example
 
             //AddTransitions
             _stateMachine.AddTransition<IdleState, ActionState>(new ReadyToAction());
+            _stateMachine.AddTransition<ActionState, IdleState>(new Stop());
+
+            //Start the Machine
+            _stateMachine.SetInitialState<IdleState>();
+            _stateMachine.Start();
         }
 
 

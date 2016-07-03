@@ -40,7 +40,7 @@ namespace Zephyr.StateMachine.Core
 
             if (_states.ContainsKey(key))
                 throw new DuplicateStateException();
-            
+
             state.SetUpTransition(TriggerTransition);
             _states.Add(key, new StateContainer(state));
         }
@@ -50,7 +50,7 @@ namespace Zephyr.StateMachine.Core
         /// Removes the passed state type from the state machine
         /// </summary>
         /// <typeparam name="TSub">The state to remove from the state machine</typeparam>
-        public bool RemoveState<TSub>() where TSub : T, new()
+        public bool RemoveState<TSub>() where TSub : T
         {
             var key = typeof (TSub);
 
@@ -65,7 +65,7 @@ namespace Zephyr.StateMachine.Core
         /// Sets the inital state of the state machine with the type passed
         /// </summary>
         /// <typeparam name="TSub">The type to set the FSM when the machine starts</typeparam>
-        public void SetInitialState<TSub>() where TSub : T, new()
+        public void SetInitialState<TSub>() where TSub : T
         {
             var key = typeof (TSub);
 
@@ -94,13 +94,13 @@ namespace Zephyr.StateMachine.Core
         /// <typeparam name="TStateFrom">The state that this transiton can be triggered from</typeparam>
         /// <typeparam name="TStateTo">the state the fsm will go to when the transition completes its trigger</typeparam>
         /// <param name="transition">The transition to trigger to go between these states</param>
-        public void AddTransition<TConcreteFrom, TConcreteTo>(ITransition transition)
-            where TConcreteFrom : T, new()
-            where TConcreteTo : T, new()
+        public void AddTransition<TStateFrom, TStateTo>(ITransition transition)
+            where TStateFrom : T
+            where TStateTo : T
         {
-            var foundStateFromContainer = GetStateContiainer(typeof (TConcreteFrom));
+            var foundStateFromContainer = GetStateContiainer(typeof (TStateFrom));
 
-            var key = typeof (TConcreteTo);
+            var key = typeof (TStateTo);
             if (!IsStateFound(key))
                 StateNotFound();
 
@@ -241,6 +241,7 @@ namespace Zephyr.StateMachine.Core
     {
     }
 
-    public class InvalidTransitionTypeException : Exception {
+    public class InvalidTransitionTypeException : Exception
+    {
     }
 }

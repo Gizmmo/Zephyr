@@ -34,13 +34,13 @@ namespace Zephyr.StateMachine.Core
         /// Removes the passed state type from the state machine
         /// </summary>
         /// <typeparam name="TSub">The state to remove from the state machine</typeparam>
-        bool RemoveState<TSub>() where TSub : T, new();
+        bool RemoveState<TSub>() where TSub : T;
 
         /// <summary>
         /// Sets the inital state of the state machine with the type passed
         /// </summary>
         /// <typeparam name="TSub">The type to set the FSM when the machine starts</typeparam>
-        void SetInitialState<TSub>() where TSub : T, new();
+        void SetInitialState<TSub>() where TSub : T;
 
         /// <summary>
         /// Starts the FSM
@@ -54,8 +54,8 @@ namespace Zephyr.StateMachine.Core
         /// <typeparam name="TStateTo">the state the fsm will go to when the transition completes its trigger</typeparam>
         /// <param name="transition">The transition to trigger to go between these states</param>
         void AddTransition<TStateFrom, TStateTo>(ITransition transition)
-            where TStateFrom : T, new()
-            where TStateTo : T, new();
+            where TStateFrom : T
+            where TStateTo : T;
 
         /// <summary>
         /// Triggers the passed transition for the Fsm's current state
